@@ -1,91 +1,133 @@
 function initSidebar() {
-  const toggle = document.getElementById("menu-toggle");
-  const sidebar = document.getElementById("sidebar");
-  const closeBtn = document.getElementById("close-btn");
-  const overlay = document.getElementById("overlay");
-  
-  const movieToggle = document.getElementById("movie-toggle");
-  const movieArrow = document.getElementById("movie-arrow");
-  const movieLinks = document.getElementById("movie-links");
+  const getElement = (id) => {
+    const element = document.getElementById(id);
+    if (!element) console.warn(`Element with id '${id}' not found`);
+    return element;
+  };
 
-  const seasonToggle = document.getElementById("season-toggle");
-  const seasonArrow = document.getElementById("season-arrow");
-  const seasonLinks = document.getElementById("season-links");
+  const toggle = getElement("menu-toggle");
+  const sidebar = getElement("sidebar");
+  const closeBtn = getElement("close-btn");
+  const overlay = getElement("overlay");
+  const movieToggle = getElement("movie-toggle");
+  const movieArrow = getElement("movie-arrow");
+  const movieLinks = getElement("movie-links");
+  const seasonToggle = getElement("season-toggle");
+  const seasonArrow = getElement("season-arrow");
+  const seasonLinks = getElement("season-links");
+  const searchInput = getElement("global-search");
+  const sidebarLinks = getElement("sidebar-links");
 
-  const searchInput = document.getElementById("global-search");
-  const sidebarLinks = document.getElementById("sidebar-links");
+  if (!sidebar || !overlay) return;
 
-  toggle.addEventListener("click", () => {
+  const openSidebar = () => {
     sidebar.classList.add("active");
     overlay.classList.add("active");
-  });
+    document.body.style.overflow = "hidden";
+  };
 
-  closeBtn.addEventListener("click", closeSidebar);
-  overlay.addEventListener("click", closeSidebar);
-
-  function closeSidebar() {
+  const closeSidebar = () => {
     sidebar.classList.remove("active");
     overlay.classList.remove("active");
+    document.body.style.overflow = "";
+  };
+
+  if (toggle) toggle.addEventListener("click", openSidebar);
+  if (closeBtn) closeBtn.addEventListener("click", closeSidebar);
+  if (overlay) overlay.addEventListener("click", closeSidebar);
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && sidebar.classList.contains("active")) {
+      closeSidebar();
+    }
+  });
+
+  const toggleSection = (contentElement, arrowElement) => {
+    if (!contentElement || !arrowElement) return;
+
+    const isVisible = !contentElement.classList.contains("hidden");
+    contentElement.classList.toggle("hidden");
+    arrowElement.textContent = isVisible ? "⌄" : "˄";
+  };
+
+  if (movieToggle && movieLinks && movieArrow) {
+    movieToggle.addEventListener("click", () => {
+      toggleSection(movieLinks, movieArrow);
+    });
   }
 
-  // Collapse logic for Movies
-  movieToggle.addEventListener("click", () => {
-    const isVisible = !movieLinks.classList.contains("hidden");
-    movieLinks.classList.toggle("hidden");
-    movieArrow.textContent = isVisible ? "⌄" : "˄";
-  });
+  if (seasonToggle && seasonLinks && seasonArrow) {
+    seasonToggle.addEventListener("click", () => {
+      toggleSection(seasonLinks, seasonArrow);
+    });
+  }
 
-  // Collapse logic for Seasons
-  seasonToggle.addEventListener("click", () => {
-    const isVisible = !seasonLinks.classList.contains("hidden");
-    seasonLinks.classList.toggle("hidden");
-    seasonArrow.textContent = isVisible ? "⌄" : "˄";
-  });
+  const loadData = (url, container, linkTemplate) => {
+    if (!container) return Promise.reject(new Error(`Container not found`));
 
-  // Load movies from JSON
-  fetch('./data/movie_data.json')
-    .then(res => res.json())
-    .then(data => {
-      movieLinks.innerHTML = '';
-      data.forEach((movie, i) => {
-        const link = document.createElement('a');
-        link.href = `./movie.html?movie=${i}`;
-        link.textContent = movie.title;
-        link.setAttribute("data-title", movie.title);
-        movieLinks.appendChild(link);
+    container.innerHTML = '<p style="opacity: 0.6;">Loading...</p>';
+
+    return fetch(url)
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+        return res.json();
+      })
+      .then(data => {
+        if (!Array.isArray(data) || data.length === 0) {
+          container.innerHTML = '<p style="opacity: 0.6;">No items available</p>';
+          return;
+        }
+
+        container.innerHTML = '';
+        const fragment = document.createDocumentFragment();
+
+        data.forEach((item, i) => {
+          const link = document.createElement('a');
+          link.href = linkTemplate(i);
+          link.textContent = item.title || `Item ${i+1}`;
+          link.setAttribute("data-title", item.title || '');
+          fragment.appendChild(link);
+        });
+
+        container.appendChild(fragment);
+      })
+      .catch(err => {
+        console.error(`Failed to load data from ${url}:`, err);
+        container.innerHTML = `<p style="color: red;">Failed to load data.</p>`;
       });
-    })
-    .catch(err => {
-      movieLinks.innerHTML = `<p style="color: red;">Failed to load movies.</p>`;
-      console.error(err);
-    });
+  };
 
-  // Load seasons from JSON
-  fetch('./data/episodes_data.json')
-    .then(res => res.json())
-    .then(data => {
-      seasonLinks.innerHTML = '';
-      data.forEach((season, i) => {
-        const link = document.createElement('a');
-        link.href = `./episodes.html?season=${i}`;
-        link.textContent = season.title;
-        link.setAttribute("data-title", season.title);
-        seasonLinks.appendChild(link);
-      });
-    })
-    .catch(err => {
-      seasonLinks.innerHTML = `<p style="color: red;">Failed to load seasons.</p>`;
-      console.error(err);
-    });
+  if (movieLinks) {
+    loadData(
+      './data/movie_data.json', 
+      movieLinks, 
+      (i) => `./movie.html?movie=${i}`
+    );
+  }
 
-  // Global Search
-  searchInput.addEventListener("input", () => {
-    const query = searchInput.value.toLowerCase();
-    const allLinks = sidebarLinks.querySelectorAll("a");
+  if (seasonLinks) {
+    loadData(
+      './data/episodes_data.json', 
+      seasonLinks, 
+      (i) => `./episodes.html?season=${i}`
+    );
+  }
 
-    allLinks.forEach(link => {
-      const title = link.getAttribute("data-title") || "";
-      link.style.display = title.toLowerCase().includes(query) ? "block" : "none";
+  if (searchInput && sidebarLinks) {
+    let debounceTimer;
+
+    searchInput.addEventListener("input", () => {
+      clearTimeout(debounceTimer);
+
+      debounceTimer = setTimeout(() => {
+        const query = searchInput.value.toLowerCase().trim();
+        const allLinks = sidebarLinks.querySelectorAll("a");
+
+        allLinks.forEach(link => {
+          const title = (link.getAttribute("data-title") || "").toLowerCase();
+          link.style.display = title.includes(query) ? "block" : "none";
+        });
+      }, 200);
     });
-  });
+  }
 }

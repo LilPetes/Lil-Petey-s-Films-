@@ -3,15 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Lil Petey's Films+ - Watch movies and shows for free without ads">
   <title>Movie Library</title>
   <link rel="icon" type="image/x-icon" href="./favicon.ico">
-  <link rel="stylesheet" href="./style/home.css">
-  <link rel="stylesheet" href="./style/style.css">
-</head>
+  <link rel="stylesheet" href="./style/main.css">
+  <link rel="preload" href="./data/movie_data.json" as="fetch" crossorigin>
+  <link rel="preload" href="./data/episodes_data.json" as="fetch" crossorigin>
+  <link rel="preload" href="./data/comingsoon_data.json" as="fetch" crossorigin>
 <body>
 
   <div id="sidebar-container"></div>
 
+<script src="./utils.js"></script>
   <div class="header-container">
     <div class="header-background"></div>
     <div class="header-text">Lil Petey's Films+</div>
@@ -62,66 +65,124 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
-      // Helper to render gallery cards
+      const getElement = (id) => {
+        const element = document.getElementById(id);
+        if (!element) console.warn(`Element with id '${id}' not found`);
+        return element;
+      };
+
+      const createCard = (item, index, page, paramName) => {
+        const card = document.createElement('div');
+        card.className = 'movie-card';
+
+        if (page) {
+          card.onclick = () => {
+            window.location.href = `./${page}?${paramName}=${index}`;
+          };
+        }
+
+        const img = document.createElement('img');
+        img.src = item.thumbnail || '';
+        img.alt = item.title || '';
+        img.loading = 'lazy';
+        img.onerror = () => {
+          img.src = 'placeholder.jpg';
+          img.onerror = null;
+        };
+
+        const title = document.createElement('div');
+        title.className = 'title';
+        title.textContent = item.title || 'Untitled';
+
+        card.appendChild(img);
+        card.appendChild(title);
+
+        return card;
+      };
+
       const renderGallery = (items, containerId, page, paramName) => {
-        const gallery = document.getElementById(containerId);
+        const gallery = getElement(containerId);
+        if (!gallery) return;
+
         gallery.innerHTML = '';
 
+        if (!Array.isArray(items) || items.length === 0) {
+          gallery.innerHTML = '<p style="opacity: 0.6;">No items available</p>';
+          return;
+        }
+
+        const fragment = document.createDocumentFragment();
+
         items.forEach((item, index) => {
-          const card = document.createElement('div');
-          card.className = 'movie-card';
+          const card = createCard(item, index, page, paramName);
 
-          if (page) {
-            card.onclick = () => {
-              window.location.href = `./${page}?${paramName}=${index}`;
-            };
-          }
-
-          const img = document.createElement('img');
-          img.src = item.thumbnail;
-          img.alt = item.title;
-
-          const title = document.createElement('div');
-          title.className = 'title';
-          title.textContent = item.title;
-
-          card.appendChild(img);
-          card.appendChild(title);
-
-          // Handle description for coming soon gallery
           if (containerId === 'coming-soon-gallery' && item.description) {
             const description = document.createElement('div');
             description.className = 'description';
-            // simple markdown for bold text
-            let formattedDescription = item.description.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+            const formattedDescription = item.description
+              .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+              .replace(/[<>&"']/g, (c) => {
+                return {
+                  '<': '&lt;',
+                  '>': '&gt;',
+                  '&': '&amp;',
+                  '"': '&quot;',
+                  "'": '&#39;'
+                }[c];
+              });
             description.innerHTML = formattedDescription;
             card.appendChild(description);
           }
 
-          gallery.appendChild(card);
+          fragment.appendChild(card);
         });
+
+        gallery.appendChild(fragment);
+      };
+
+      const fetchData = async (url) => {
+        try {
+          const response = await fetch(url, { cache: 'no-cache' });
+          if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+          return await response.json();
+        } catch (error) {
+          console.error(`Error fetching ${url}:`, error);
+          throw error;
+        }
       };
 
       try {
-        const [moviesRes, upcomingRes, episodesRes] = await Promise.all([
-          fetch('./data/movie_data.json'),
-          fetch('./data/comingsoon_data.json'),
-          fetch('./data/episodes_data.json')
+        const results = await Promise.allSettled([
+          fetchData('./data/movie_data.json'),
+          fetchData('./data/comingsoon_data.json'),
+          fetchData('./data/episodes_data.json')
         ]);
 
-        const movies = await moviesRes.json();
-        const comingSoon = await upcomingRes.json();
-        const episodes = await episodesRes.json();
+        const [moviesResult, upcomingResult, episodesResult] = results;
 
-        renderGallery(movies, 'movie-gallery', 'movie.html', 'movie');
-        renderGallery(comingSoon, 'coming-soon-gallery', null, null);
-        renderGallery(episodes, 'episodes-gallery', 'episodes.html', 'season');
+        if (moviesResult.status === 'fulfilled') {
+          renderGallery(moviesResult.value, 'movie-gallery', 'movie.html', 'movie');
+        } else {
+          const gallery = getElement('movie-gallery');
+          if (gallery) gallery.innerHTML = '<p style="color: red;">Could not load movie list.</p>';
+        }
+
+        if (upcomingResult.status === 'fulfilled') {
+          renderGallery(upcomingResult.value, 'coming-soon-gallery', null, null);
+        } else {
+          const gallery = getElement('coming-soon-gallery');
+          if (gallery) gallery.innerHTML = '<p style="color: red;">Could not load upcoming movies.</p>';
+        }
+
+        if (episodesResult.status === 'fulfilled') {
+          renderGallery(episodesResult.value, 'episodes-gallery', 'episodes.html', 'season');
+        } else {
+          const gallery = getElement('episodes-gallery');
+          if (gallery) gallery.innerHTML = '<p style="color: red;">Could not load episodes.</p>';
+        }
 
       } catch (err) {
         console.error("Failed to load data:", err);
-        document.getElementById('movie-gallery').innerHTML = `<p style="color: red;">Could not load movie list.</p>`;
-        document.getElementById('coming-soon-gallery').innerHTML = `<p style="color: red;">Could not load upcoming movies.</p>`;
-        document.getElementById('episodes-gallery').innerHTML = `<p style="color: red;">Could not load episodes.</p>`;
       }
     });
   </script>

@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Watch movies from Lil Petey's Films+">
   <title>Movie</title>
   <link rel="icon" type="image/x-icon" href="./favicon.ico">
-  <link rel="stylesheet" href="./style/style.css">
-  <link rel="stylesheet" href="./style/movie.css">
+  <link rel="stylesheet" href="./style/main.css">
   <style>
     .header-background {
       background-image: url('https://thumbnail');
@@ -39,6 +39,7 @@
   </div>
 
   <div id="sidebar-container"></div>
+  <script src="./utils.js"></script>
   <script src="./sidebar.js"></script>
   <script>
     fetch('./sidebar.html')
@@ -53,57 +54,102 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
+      const getElement = (selector) => {
+        const element = document.querySelector(selector);
+        if (!element) console.warn(`Element with selector '${selector}' not found`);
+        return element;
+      };
+
+      const updateElement = (selector, updateFn) => {
+        const element = getElement(selector);
+        if (element) updateFn(element);
+      };
+
+      const showError = (message) => {
+        updateElement('.header-text', el => el.textContent = 'Error');
+        updateElement('.content-text pre', el => {
+          el.textContent = message || 'Failed to load movie data. Please try again later.';
+          el.style.color = 'red';
+        });
+      };
+
       const params = new URLSearchParams(window.location.search);
       const movieIndex = parseInt(params.get('movie'), 10);
-  
-      if (isNaN(movieIndex)) return;
-  
+
+      if (isNaN(movieIndex)) {
+        showError('Invalid movie ID. Please return to the home page.');
+        return;
+      }
+
       try {
         const response = await fetch('./data/movie_data.json');
+        if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+
         const data = await response.json();
-  
+        if (!Array.isArray(data)) throw new Error('Invalid data format');
+
         const movie = data[movieIndex];
-        if (!movie) return;
-  
-        document.title = movie.title;
-  
-        const headerBg = document.querySelector('.header-background');
-        if (headerBg) {
-          headerBg.style.backgroundImage = `url('${movie.thumbnail}')`;
+        if (!movie) throw new Error(`Movie with ID ${movieIndex} not found`);
+
+        document.title = movie.title || 'Movie';
+
+        let metaDesc = document.querySelector('meta[name="description"]');
+        if (metaDesc) {
+          metaDesc.setAttribute('content', `Watch ${movie.title} - ${movie.description?.substring(0, 100) || ''}...`);
         }
-  
-        const headerText = document.querySelector('.header-text');
-        if (headerText) {
-          headerText.textContent = movie.title;
-        }
-  
-        const img = document.querySelector('.content-section img');
-        if (img) {
-          img.src = movie.thumbnail;
-          img.alt = movie.title;
-        }
-  
-        const desc = document.querySelector('.content-text pre');
-        if (desc) {
-          desc.textContent = movie.description;
-        }
-  
-        const embed = document.querySelector('.embed-section iframe');
-        if (embed) {
-          embed.src = movie.embed_link;
-        }
-  
-        /*
-        const trailer = document.querySelector('.trailer-video iframe');
-        if (trailer) {
-          const youtubeID = new URL(movie.video_url).searchParams.get('v');
-          if (youtubeID) {
-            trailer.src = `https://www.youtube.com/embed/${youtubeID}`;
+
+        updateElement('.header-background', el => {
+          el.style.backgroundImage = `url('${movie.thumbnail || ''}')`;        
+        });
+
+        updateElement('.header-text', el => {
+          el.textContent = movie.title || 'Untitled Movie';
+        });
+
+        updateElement('.content-section img', el => {
+          el.src = movie.thumbnail || '';
+          el.alt = movie.title || 'Movie thumbnail';
+          el.onerror = () => {
+            el.src = 'placeholder.jpg';
+            el.onerror = null;
+          };
+        });
+
+        updateElement('.content-text pre', el => {
+          el.textContent = movie.description || 'No description available';
+        });
+
+        updateElement('.embed-section iframe', el => {
+          if (movie.embed_link) {
+            el.src = movie.embed_link;
+            el.title = movie.title;
+          } else {
+            el.parentElement.style.display = 'none';
           }
-        }
-        */
+        });
+
+        // MAYBE this might be needed
+        // const trailerSection = getElement('.trailer-section');
+        // if (trailerSection && movie.video_url) {
+        //   trailerSection.style.display = 'block';
+        //   updateElement('.trailer-video iframe', el => {
+        //     try {
+        //       const youtubeID = new URL(movie.video_url).searchParams.get('v');
+        //       if (youtubeID) {
+        //         el.src = `https://www.youtube.com/embed/${youtubeID}`;
+        //         el.title = `${movie.title} trailer`;
+        //       }
+        //     } catch (e) {
+        //       console.warn('Invalid trailer URL:', e);
+        //       trailerSection.style.display = 'none';
+        //     }
+        //   });
+        // } else if (trailerSection) {
+        //   trailerSection.style.display = 'none';
+        // }
       } catch (err) {
         console.error("Failed to load or process movie data:", err);
+        showError(err.message);
       }
     });
   </script>  
