@@ -6,7 +6,7 @@
   <meta name="description" content="Watch movies from Lil Petey's Films+">
   <title>Movie</title>
   <link rel="icon" type="image/x-icon" href="./favicon.ico">
-  <link rel="stylesheet" href="./style/main.css">
+  <link rel="stylesheet" href="./style/style.css">
   <style>
     .header-background {
       background-image: url('https://thumbnail');
@@ -54,16 +54,12 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
-      const getElement = (selector) => {
-        const element = document.querySelector(selector);
-        if (!element) console.warn(`Element with selector '${selector}' not found`);
-        return element;
-      };
+      if (!window.utils) {
+        console.error('utils.js is not loaded properly');
+        return;
+      }
 
-      const updateElement = (selector, updateFn) => {
-        const element = getElement(selector);
-        if (element) updateFn(element);
-      };
+      const { getElement, updateElement } = window.utils;
 
       const showError = (message) => {
         updateElement('.header-text', el => el.textContent = 'Error');

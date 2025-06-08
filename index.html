@@ -6,7 +6,7 @@
   <meta name="description" content="Lil Petey's Films+ - Watch movies and shows for free without ads">
   <title>Movie Library</title>
   <link rel="icon" type="image/x-icon" href="./favicon.ico">
-  <link rel="stylesheet" href="./style/main.css">
+  <link rel="stylesheet" href="./style/style.css">
   <link rel="preload" href="./data/movie_data.json" as="fetch" crossorigin>
   <link rel="preload" href="./data/episodes_data.json" as="fetch" crossorigin>
   <link rel="preload" href="./data/comingsoon_data.json" as="fetch" crossorigin>
@@ -65,11 +65,7 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
-      const getElement = (id) => {
-        const element = document.getElementById(id);
-        if (!element) console.warn(`Element with id '${id}' not found`);
-        return element;
-      };
+      const { getElementById: getElement } = window.utils;
 
       const createCard = (item, index, page, paramName) => {
         const card = document.createElement('div');

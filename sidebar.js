@@ -1,9 +1,10 @@
 function initSidebar() {
-  const getElement = (id) => {
-    const element = document.getElementById(id);
-    if (!element) console.warn(`Element with id '${id}' not found`);
-    return element;
-  };
+  if (!window.utils) {
+    console.error('utils.js is not loaded properly');
+    return;
+  }
+
+  const { getElementById: getElement } = window.utils;
 
   const toggle = getElement("menu-toggle");
   const sidebar = getElement("sidebar");
