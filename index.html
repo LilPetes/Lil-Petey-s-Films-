@@ -16,7 +16,7 @@
 
 <script src="./utils.js"></script>
   <div class="header-container">
-    <div class="header-background"></div>
+    <div class="header-background" style="background-image: url('https://files.catbox.moe/my2nqu');"></div>
     <div class="header-text">Lil Petey's Films+</div>
   </div>
 
@@ -119,17 +119,19 @@
           if (containerId === 'coming-soon-gallery' && item.description) {
             const description = document.createElement('div');
             description.className = 'description';
-            const formattedDescription = item.description
-              .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
-              .replace(/[<>&"']/g, (c) => {
-                return {
-                  '<': '&lt;',
-                  '>': '&gt;',
-                  '&': '&amp;',
-                  '"': '&quot;',
-                  "'": '&#39;'
-                }[c];
-              });
+
+            const sanitizedDescription = item.description.replace(/[<>&"']/g, (c) => {
+              return {
+                '<': '&lt;',
+                '>': '&gt;',
+                '&': '&amp;',
+                '"': '&quot;',
+                "'": '&#39;'
+              }[c];
+            });
+
+            const formattedDescription = sanitizedDescription.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+
             description.innerHTML = formattedDescription;
             card.appendChild(description);
           }
