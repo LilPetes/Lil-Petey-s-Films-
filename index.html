@@ -24,7 +24,21 @@
   
   Have fun!
   -Lil Petey</pre>
-  </div>    
+  </div> 
+  
+  <!-- Coming Soon Section -->
+  <div class="intro-box" style="width:30rem; font-size: 2rem; background:None;">
+    <pre>COMING SOON!!!!</pre>
+  </div> 
+
+  <div class="gallery" id="coming-soon-gallery">
+    <p style="color: gray;">Loading upcoming releases...</p>
+  </div>
+
+  <!-- Movies Section -->
+  <div class="intro-box" style="width:30rem; font-size: 2rem; background:None;">
+    <pre>Movies</pre>
+  </div> 
 
   <!-- Movie Gallery -->
   <div class="gallery" id="movie-gallery">
@@ -44,21 +58,22 @@
       });
   </script>
 
-  <!-- Movie Loader -->
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
-      try {
-        const res = await fetch('./data/movie_data.json');
-        const movies = await res.json();
-        const gallery = document.getElementById('movie-gallery');
+      // Helper to render movie cards
+      const renderGallery = (movies, containerId, linkable = true) => {
+        const gallery = document.getElementById(containerId);
         gallery.innerHTML = '';
 
         movies.forEach((movie, index) => {
           const card = document.createElement('div');
           card.className = 'movie-card';
-          card.onclick = () => {
-            window.location.href = `./movie.html?movie=${index}`;
-          };
+
+          if (linkable) {
+            card.onclick = () => {
+              window.location.href = `./movie.html?movie=${index}`;
+            };
+          }
 
           const img = document.createElement('img');
           img.src = movie.thumbnail;
@@ -72,10 +87,24 @@
           card.appendChild(title);
           gallery.appendChild(card);
         });
+      };
+
+      try {
+        const [moviesRes, upcomingRes] = await Promise.all([
+          fetch('./data/movie_data.json'),
+          fetch('./data/comingsoon_data.json')
+        ]);
+
+        const movies = await moviesRes.json();
+        const comingSoon = await upcomingRes.json();
+
+        renderGallery(movies, 'movie-gallery', true);
+        renderGallery(comingSoon, 'coming-soon-gallery', false);
+
       } catch (err) {
-        console.error("Failed to load movies:", err);
-        const gallery = document.getElementById('movie-gallery');
-        gallery.innerHTML = `<p style="color: red;">Could not load movie list.</p>`;
+        console.error("Failed to load data:", err);
+        document.getElementById('movie-gallery').innerHTML = `<p style="color: red;">Could not load movie list.</p>`;
+        document.getElementById('coming-soon-gallery').innerHTML = `<p style="color: red;">Could not load upcoming movies.</p>`;
       }
     });
   </script>
