@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Movie</title>
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <link rel="stylesheet" href="style/style.css">
-  <link rel="stylesheet" href="style/movie.css">
+  <link rel="icon" type="image/x-icon" href="./favicon.ico">
+  <link rel="stylesheet" href="./style/style.css">
+  <link rel="stylesheet" href="./style/movie.css">
   <style>
     .header-background {
       background-image: url('https://thumbnail');
@@ -39,9 +39,9 @@
   </div>
 
   <div id="sidebar-container"></div>
-  <script src="sidebar.js"></script>
+  <script src="./sidebar.js"></script>
   <script>
-    fetch('/sidebar.html')
+    fetch('./sidebar.html')
       .then(res => res.text())
       .then(html => {
         document.getElementById('sidebar-container').innerHTML = html;
@@ -59,7 +59,7 @@
       if (isNaN(movieIndex)) return;
   
       try {
-        const response = await fetch('/data/movie_data.json');
+        const response = await fetch('./data/movie_data.json');
         const data = await response.json();
   
         const movie = data[movieIndex];

@@ -30,13 +30,13 @@ function initSidebar() {
   });
 
   // Load movies from JSON
-  fetch('/data/movie_data.json')
+  fetch('./data/movie_data.json')
     .then(res => res.json())
     .then(data => {
       movieLinks.innerHTML = '';
       data.forEach((movie, i) => {
         const link = document.createElement('a');
-        link.href = `/movie.html?movie=${i}`;
+        link.href = `./movie.html?movie=${i}`;
         link.textContent = movie.title;
         link.setAttribute("data-title", movie.title);
         movieLinks.appendChild(link);
