@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Watch episodes from Lil Petey's Films+">
   <title>Episodes</title>
   <link rel="icon" type="image/x-icon" href="./favicon.ico">
   <link rel="stylesheet" href="./style/style.css">
-  <link rel="stylesheet" href="./style/episodes.css">
   <style>
     .header-background {
       background-image: url('https://thumbnail');
@@ -30,6 +30,7 @@
   <div id="episodes-list"></div>
 
   <div id="sidebar-container"></div>
+  <script src="./utils.js"></script>
   <script src="./sidebar.js"></script>
   <script>
     fetch('./sidebar.html')
@@ -44,70 +45,131 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
+      const { getElement, updateElement } = window.utils;
+
+      const showError = (message) => {
+        updateElement('.header-text', el => el.textContent = 'Error');
+        updateElement('.content-text pre', el => {
+          el.textContent = message || 'Failed to load season data. Please try again later.';
+          el.style.color = 'red';
+        });
+
+        const episodesList = getElement('#episodes-list');
+        if (episodesList) episodesList.innerHTML = '';
+      };
+
       const params = new URLSearchParams(window.location.search);
       const seasonIndex = parseInt(params.get('season'), 10);
-  
-      if (isNaN(seasonIndex)) return;
-  
+
+      if (isNaN(seasonIndex)) {
+        showError('Invalid season ID. Please return to the home page.');
+        return;
+      }
+
       try {
         const response = await fetch('./data/episodes_data.json');
+        if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+
         const data = await response.json();
-  
+        if (!Array.isArray(data)) throw new Error('Invalid data format');
+
         const season = data[seasonIndex];
-        if (!season) return;
-  
-        document.title = season.title;
-  
-        const headerBg = document.querySelector('.header-background');
-        if (headerBg) {
-          headerBg.style.backgroundImage = `url('${season.thumbnail}')`;
-        }
-  
-        const headerText = document.querySelector('.header-text');
-        if (headerText) {
-          headerText.textContent = season.title;
-        }
-  
-        const img = document.querySelector('.content-section img');
-        if (img) {
-          img.src = season.thumbnail;
-          img.alt = season.title;
-        }
-  
-        const desc = document.querySelector('.content-text pre');
-        if (desc) {
-          desc.textContent = season.description;
+        if (!season) throw new Error(`Season with ID ${seasonIndex} not found`);
+
+        document.title = season.title || 'Episodes';
+
+        let metaDesc = document.querySelector('meta[name="description"]');
+        if (metaDesc) {
+          metaDesc.setAttribute('content', `Watch ${season.title} - ${season.description?.substring(0, 100) || ''}...`);
         }
 
-        const episodesList = document.getElementById('episodes-list');
-        episodesList.innerHTML = ''; 
-  
-        season.embed_links.forEach(episode => {
-            const episodeElement = document.createElement('div');
-            episodeElement.className = 'episode';
+        updateElement('.header-background', el => {
+          el.style.backgroundImage = `url('${season.thumbnail || ''}')`;        
+        });
 
-            const titleElement = document.createElement('h2');
-            titleElement.textContent = episode.title;
+        updateElement('.header-text', el => {
+          el.textContent = season.title || 'Untitled Season';
+        });
 
-            const descriptionElement = document.createElement('p');
-            descriptionElement.textContent = episode.description;
+        updateElement('.content-section img', el => {
+          el.src = season.thumbnail || '';
+          el.alt = season.title || 'Season thumbnail';
+          el.onerror = () => {
+            el.src = 'placeholder.jpg';
+            el.onerror = null;
+          };
+        });
+
+        updateElement('.content-text pre', el => {
+          el.textContent = season.description || 'No description available';
+        });
+
+        const episodesList = getElement('#episodes-list');
+        if (!episodesList) return;
+
+        episodesList.innerHTML = '';
+
+        if (!Array.isArray(season.embed_links) || season.embed_links.length === 0) {
+          episodesList.innerHTML = '<p style="text-align: center; color: #999;">No episodes available for this season.</p>';
+          return;
+        }
+
+        const fragment = document.createDocumentFragment();
+
+        season.embed_links.forEach((episode, index) => {
+          if (!episode) return;
+
+          const episodeElement = document.createElement('div');
+          episodeElement.className = 'episode';
+
+          const titleElement = document.createElement('h2');
+          titleElement.textContent = episode.title || `Episode ${index + 1}`;
+
+          const descriptionElement = document.createElement('p');
+          descriptionElement.textContent = episode.description || 'No description available';
+
+          episodeElement.appendChild(titleElement);
+          episodeElement.appendChild(descriptionElement);
+
+          if (episode.embed_link) {
+            const iframeWrapper = document.createElement('div');
+            iframeWrapper.className = 'iframe-wrapper';
+            iframeWrapper.style.position = 'relative';
+            iframeWrapper.style.paddingBottom = '56.25%';
+            iframeWrapper.style.height = '0';
+            iframeWrapper.style.overflow = 'hidden';
 
             const iframeElement = document.createElement('iframe');
             iframeElement.src = episode.embed_link;
-            iframeElement.width = "100%";
-            iframeElement.height = "400";
-            iframeElement.style.border = "none";
+            iframeElement.style.position = 'absolute';
+            iframeElement.style.top = '0';
+            iframeElement.style.left = '0';
+            iframeElement.style.width = '100%';
+            iframeElement.style.height = '100%';
+            iframeElement.style.border = 'none';
+            iframeElement.title = episode.title || `Episode ${index + 1}`;
+            iframeElement.loading = 'lazy';
             iframeElement.allowFullscreen = true;
 
-            episodeElement.appendChild(titleElement);
-            episodeElement.appendChild(descriptionElement);
-            episodeElement.appendChild(iframeElement);
+            iframeWrapper.appendChild(iframeElement);
+            episodeElement.appendChild(iframeWrapper);
+          } else {
+            const unavailableMsg = document.createElement('p');
+            unavailableMsg.textContent = 'Video unavailable';
+            unavailableMsg.style.color = '#999';
+            unavailableMsg.style.fontStyle = 'italic';
+            unavailableMsg.style.textAlign = 'center';
+            episodeElement.appendChild(unavailableMsg);
+          }
 
-            episodesList.appendChild(episodeElement);
+          fragment.appendChild(episodeElement);
         });
+
+        episodesList.appendChild(fragment);
 
       } catch (err) {
         console.error("Failed to load or process season data:", err);
+        showError(err.message);
       }
     });
   </script>  
