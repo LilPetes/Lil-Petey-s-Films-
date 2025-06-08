@@ -90,15 +90,24 @@ body {
 
 .movie-card img {
     width: 100%;
-    height: auto;
+    height: 225px; /* Fixed height for consistent card size */
     display: block;
-    object-fit: cover;
+    object-fit: contain; /* Scales the image to fit, with letterboxing */
+    background-color: #000; /* Black background for letterboxing */
 }
 
 .movie-card .title {
     padding: 10px;
     font-size: 1.1rem;
     color: #fff;
+}
+
+.movie-card .description {
+    padding: 10px;
+    font-size: 0.9rem;
+    color: #ccc;
+    text-align: left;
+    white-space: pre-wrap; /* Respects newlines in the description */
 }
 
 /* Optional: Responsive support */

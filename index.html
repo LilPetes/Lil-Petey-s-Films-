@@ -87,6 +87,17 @@
 
           card.appendChild(img);
           card.appendChild(title);
+
+          // Handle description for coming soon gallery
+          if (containerId === 'coming-soon-gallery' && item.description) {
+            const description = document.createElement('div');
+            description.className = 'description';
+            // simple markdown for bold text
+            let formattedDescription = item.description.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+            description.innerHTML = formattedDescription;
+            card.appendChild(description);
+          }
+
           gallery.appendChild(card);
         });
       };
