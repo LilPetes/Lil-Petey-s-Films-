@@ -3,9 +3,15 @@ function initSidebar() {
   const sidebar = document.getElementById("sidebar");
   const closeBtn = document.getElementById("close-btn");
   const overlay = document.getElementById("overlay");
+  
   const movieToggle = document.getElementById("movie-toggle");
   const movieArrow = document.getElementById("movie-arrow");
   const movieLinks = document.getElementById("movie-links");
+
+  const seasonToggle = document.getElementById("season-toggle");
+  const seasonArrow = document.getElementById("season-arrow");
+  const seasonLinks = document.getElementById("season-links");
+
   const searchInput = document.getElementById("global-search");
   const sidebarLinks = document.getElementById("sidebar-links");
 
@@ -22,11 +28,18 @@ function initSidebar() {
     overlay.classList.remove("active");
   }
 
-  // Collapse logic
+  // Collapse logic for Movies
   movieToggle.addEventListener("click", () => {
     const isVisible = !movieLinks.classList.contains("hidden");
     movieLinks.classList.toggle("hidden");
     movieArrow.textContent = isVisible ? "⌄" : "˄";
+  });
+
+  // Collapse logic for Seasons
+  seasonToggle.addEventListener("click", () => {
+    const isVisible = !seasonLinks.classList.contains("hidden");
+    seasonLinks.classList.toggle("hidden");
+    seasonArrow.textContent = isVisible ? "⌄" : "˄";
   });
 
   // Load movies from JSON
@@ -44,6 +57,24 @@ function initSidebar() {
     })
     .catch(err => {
       movieLinks.innerHTML = `<p style="color: red;">Failed to load movies.</p>`;
+      console.error(err);
+    });
+
+  // Load seasons from JSON
+  fetch('./data/episodes_data.json')
+    .then(res => res.json())
+    .then(data => {
+      seasonLinks.innerHTML = '';
+      data.forEach((season, i) => {
+        const link = document.createElement('a');
+        link.href = `./episodes.html?season=${i}`;
+        link.textContent = season.title;
+        link.setAttribute("data-title", season.title);
+        seasonLinks.appendChild(link);
+      });
+    })
+    .catch(err => {
+      seasonLinks.innerHTML = `<p style="color: red;">Failed to load seasons.</p>`;
       console.error(err);
     });
 
