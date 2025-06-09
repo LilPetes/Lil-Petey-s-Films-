@@ -1,4 +1,4 @@
-import json
+import json, urllib.parse
 
 # with open("data.json", 'r', encoding='utf-8') as f:
 #     json_input = json.loads(f.read())
@@ -16,9 +16,6 @@ import json
 # # Optional: Save the updated JSON to a file
 # with open("updated_data.json", 'w', encoding='utf-8') as f:
 #     json.dump(json_input, f, ensure_ascii=False, indent=2)
-
-import urllib.parse
-
 def encode_url_path_only(url: str) -> str:
     # Parse the URL
     parsed = urllib.parse.urlsplit(url)
