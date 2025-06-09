@@ -1,8 +1,4 @@
-import yt_dlp
-import requests
-import json
-import os
-import tempfile
+import yt_dlp, requests, json, os, tempfile
 
 def upload_to_catbox(file_path):
     url = 'https://catbox.moe/user/api.php'
