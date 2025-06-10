@@ -219,7 +219,17 @@ const renderMediaPage = async (config) => {
     const mediaIndex = parseInt(params.get(paramName), 10);
 
     if (isNaN(mediaIndex)) {
-      handleError(`Invalid ${mediaType} ID. Please return to the home page.`, containers.errorContainer);
+      const errorMessage = `Invalid ${mediaType} ID. Please <a href="./index.html">return to the home page</a>.`;
+      if (containers.errorContainer) {
+        const errorElement = getElement(containers.errorContainer);
+        if (errorElement) {
+          errorElement.innerHTML = errorMessage;
+          errorElement.classList.add('error-message');
+          errorElement.setAttribute('role', 'alert');
+          errorElement.style.whiteSpace = 'pre-wrap';
+          errorElement.style.textAlign = 'center';
+        }
+      }
       return null;
     }
 

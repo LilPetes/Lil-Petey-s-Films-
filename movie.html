@@ -11,6 +11,31 @@
     .header-background {
       background-image: url('https://thumbnail');
     }
+    .error-message {
+      color: #d32f2f;
+      font-size: 1.2rem;
+      text-align: center;
+      padding: 20px;
+      background-color: #ffebee;
+      border-radius: 4px;
+      margin: 20px 0;
+      white-space: pre-wrap;
+    }
+    .error-message a {
+      color: #1976d2;
+      text-decoration: underline;
+      font-weight: bold;
+    }
+    .error-message a:hover {
+      text-decoration: none;
+    }
+    .content-text {
+      text-align: center;
+    }
+    .content-text pre {
+      white-space: pre-wrap;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -24,7 +49,7 @@
     <div class="content-section">
       <img src="" alt="Movie thumbnail" loading="lazy">
       <div class="content-text">
-        <pre>This page does not exist</pre>
+        <pre role="alert" class="error-message">Invalid movie ID. Please <a href="./index.html">return to the home page</a>.</pre>
       </div>
     </div>
 
