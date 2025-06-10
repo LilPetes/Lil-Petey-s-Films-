@@ -10,46 +10,47 @@
   <link rel="preload" href="./data/movie_data.json" as="fetch" crossorigin>
   <link rel="preload" href="./data/episodes_data.json" as="fetch" crossorigin>
   <link rel="preload" href="./data/comingsoon_data.json" as="fetch" crossorigin>
+</head>
 <body>
 
   <div id="sidebar-container"></div>
 
-<script src="./utils.js"></script>
-  <div class="header-container">
-    <div class="header-background" style="background-image: url('https://files.catbox.moe/my2nqu');"></div>
-    <div class="header-text">Lil Petey's Films+</div>
-  </div>
+  <script src="./utils.js"></script>
 
-  <div class="intro-box">
-    <pre>Hello and Welcome to Lil Petey's Films+! Here you can watch all movies made by the studio for free and no ads included. Information on other projects will also drop here when new info has released.
-  
-  Have fun!
-  -Lil Petey</pre>
-  </div> 
-  
-  <div class="intro-box" style="width:30rem; font-size: 2rem; background:None;">
-    <pre>COMING SOON!!!!</pre>
-  </div> 
+  <main>
+    <header class="header-container">
+      <div class="header-background" style="background-image: url('https://files.catbox.moe/my2nqu');" role="img" aria-label="Lil Petey's Films+ banner image"></div>
+      <h1 class="header-text">Lil Petey's Films+</h1>
+    </header>
 
-  <div class="gallery" id="coming-soon-gallery">
-    <p style="color: gray;">Loading upcoming releases...</p>
-  </div>
+    <section class="intro-box">
+      <p>Hello and Welcome to Lil Petey's Films+! Here you can watch all movies made by the studio for free and no ads included. Information on other projects will also drop here when new info has released.
 
-  <div class="intro-box" style="width:30rem; font-size: 2rem; background:None;">
-    <pre>Episodes</pre>
-  </div> 
+      Have fun!
+      -Lil Petey</p>
+    </section>
 
-  <div class="gallery" id="episodes-gallery">
-    <p style="color: gray;">Loading episodes...</p>
-  </div>
+    <section>
+      <h2 class="section-title">COMING SOON!!!!</h2>
+      <div class="gallery" id="coming-soon-gallery" aria-label="Upcoming releases">
+        <p style="color: gray;" aria-live="polite">Loading upcoming releases...</p>
+      </div>
+    </section>
 
-  <div class="intro-box" style="width:30rem; font-size: 2rem; background:None;">
-    <pre>Movies</pre>
-  </div> 
+    <section>
+      <h2 class="section-title">Episodes</h2>
+      <div class="gallery" id="episodes-gallery" aria-label="Episodes list">
+        <p style="color: gray;" aria-live="polite">Loading episodes...</p>
+      </div>
+    </section>
 
-  <div class="gallery" id="movie-gallery">
-    <p style="color: gray;">Loading movies...</p>
-  </div>
+    <section>
+      <h2 class="section-title">Movies</h2>
+      <div class="gallery" id="movie-gallery" aria-label="Movies list">
+        <p style="color: gray;" aria-live="polite">Loading movies...</p>
+      </div>
+    </section>
+  </main>
 
   <script src="./sidebar.js"></script>
   <script>
@@ -65,28 +66,55 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
-      const { getElementById: getElement } = window.utils;
+      if (!window.utils) {
+        console.error('utils.js is not loaded properly');
+        return;
+      }
+
+      const { 
+        getElementById: getElement, 
+        fetchData: utilsFetchData,
+        sanitizeHTML,
+        handleError 
+      } = window.utils;
 
       const createCard = (item, index, page, paramName) => {
-        const card = document.createElement('div');
+        const card = document.createElement('article');
         card.className = 'movie-card';
 
+        const cardId = `card-${paramName || 'item'}-${index}`;
+        card.setAttribute('aria-labelledby', cardId);
+
         if (page) {
+          card.tabIndex = 0;
+          card.setAttribute('role', 'button');
+          card.setAttribute('aria-label', `View ${item.title || 'item'} details`);
+
           card.onclick = () => {
             window.location.href = `./${page}?${paramName}=${index}`;
           };
+
+          card.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              window.location.href = `./${page}?${paramName}=${index}`;
+            }
+          });
         }
 
         const img = document.createElement('img');
         img.src = item.thumbnail || '';
-        img.alt = item.title || '';
+        img.alt = `${item.title || 'Untitled'} thumbnail`;
         img.loading = 'lazy';
+        img.setAttribute('decoding', 'async');
         img.onerror = () => {
           img.src = 'placeholder.jpg';
+          img.alt = 'Image could not be loaded';
           img.onerror = null;
         };
 
-        const title = document.createElement('div');
+        const title = document.createElement('h3');
+        title.id = cardId;
         title.className = 'title';
         title.textContent = item.title || 'Untitled';
 
@@ -103,7 +131,7 @@
         gallery.innerHTML = '';
 
         if (!Array.isArray(items) || items.length === 0) {
-          gallery.innerHTML = '<p style="opacity: 0.6;">No items available</p>';
+          gallery.innerHTML = '<p style="opacity: 0.6;" role="status">No items available</p>';
           return;
         }
 
@@ -116,15 +144,7 @@
             const description = document.createElement('div');
             description.className = 'description';
 
-            const sanitizedDescription = item.description.replace(/[<>&"']/g, (c) => {
-              return {
-                '<': '&lt;',
-                '>': '&gt;',
-                '&': '&amp;',
-                '"': '&quot;',
-                "'": '&#39;'
-              }[c];
-            });
+            const sanitizedDescription = sanitizeHTML(item.description);
 
             const formattedDescription = sanitizedDescription.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
 
@@ -138,49 +158,60 @@
         gallery.appendChild(fragment);
       };
 
-      const fetchData = async (url) => {
-        try {
-          const response = await fetch(url, { cache: 'no-cache' });
-          if (!response.ok) throw new Error(`HTTP error ${response.status}`);
-          return await response.json();
-        } catch (error) {
-          console.error(`Error fetching ${url}:`, error);
-          throw error;
-        }
-      };
-
       try {
+        const loadingStatuses = ['movie-gallery', 'coming-soon-gallery', 'episodes-gallery'].map(id => {
+          const container = getElement(id);
+          if (container) {
+            container.setAttribute('aria-busy', 'true');
+          }
+          return container;
+        });
+
         const results = await Promise.allSettled([
-          fetchData('./data/movie_data.json'),
-          fetchData('./data/comingsoon_data.json'),
-          fetchData('./data/episodes_data.json')
+          utilsFetchData('./data/movie_data.json'),
+          utilsFetchData('./data/comingsoon_data.json'),
+          utilsFetchData('./data/episodes_data.json')
         ]);
+
+        loadingStatuses.forEach(container => {
+          if (container) container.setAttribute('aria-busy', 'false');
+        });
 
         const [moviesResult, upcomingResult, episodesResult] = results;
 
         if (moviesResult.status === 'fulfilled') {
           renderGallery(moviesResult.value, 'movie-gallery', 'movie.html', 'movie');
         } else {
-          const gallery = getElement('movie-gallery');
-          if (gallery) gallery.innerHTML = '<p style="color: red;">Could not load movie list.</p>';
+          handleError(
+            moviesResult.reason,
+            'movie-gallery',
+            '<p>Movies will be available soon. Please check back later.</p>'
+          );
         }
 
         if (upcomingResult.status === 'fulfilled') {
           renderGallery(upcomingResult.value, 'coming-soon-gallery', null, null);
         } else {
-          const gallery = getElement('coming-soon-gallery');
-          if (gallery) gallery.innerHTML = '<p style="color: red;">Could not load upcoming movies.</p>';
+          handleError(
+            upcomingResult.reason,
+            'coming-soon-gallery',
+            '<p>Coming soon information is currently unavailable.</p>'
+          );
         }
 
         if (episodesResult.status === 'fulfilled') {
           renderGallery(episodesResult.value, 'episodes-gallery', 'episodes.html', 'season');
         } else {
-          const gallery = getElement('episodes-gallery');
-          if (gallery) gallery.innerHTML = '<p style="color: red;">Could not load episodes.</p>';
+          handleError(
+            episodesResult.reason,
+            'episodes-gallery',
+            '<p>Episodes will be available soon. Please check back later.</p>'
+          );
         }
 
       } catch (err) {
         console.error("Failed to load data:", err);
+        handleError(err, document.body, '<p>We are experiencing technical difficulties. Please try refreshing the page.</p>');
       }
     });
   </script>

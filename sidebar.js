@@ -4,7 +4,7 @@ function initSidebar() {
     return;
   }
 
-  const { getElementById: getElement } = window.utils;
+  const { getElementById: getElement, loadSidebarData, debounce } = window.utils;
 
   const toggle = getElement("menu-toggle");
   const sidebar = getElement("sidebar");
@@ -18,19 +18,38 @@ function initSidebar() {
   const seasonLinks = getElement("season-links");
   const searchInput = getElement("global-search");
   const sidebarLinks = getElement("sidebar-links");
+  const searchResultsStatus = getElement("search-results-status");
 
   if (!sidebar || !overlay) return;
 
+  let lastFocusedElement = null;
+
   const openSidebar = () => {
+    lastFocusedElement = document.activeElement;
     sidebar.classList.add("active");
     overlay.classList.add("active");
     document.body.style.overflow = "hidden";
+
+    toggle.setAttribute("aria-expanded", "true");
+    sidebar.setAttribute("aria-hidden", "false");
+
+    setTimeout(() => {
+      const closeButton = getElement("close-btn");
+      if (closeButton) closeButton.focus();
+    }, 100);
   };
 
   const closeSidebar = () => {
     sidebar.classList.remove("active");
     overlay.classList.remove("active");
     document.body.style.overflow = "";
+
+    toggle.setAttribute("aria-expanded", "false");
+    sidebar.setAttribute("aria-hidden", "true");
+
+    if (lastFocusedElement) {
+      lastFocusedElement.focus();
+    }
   };
 
   if (toggle) toggle.addEventListener("click", openSidebar);
@@ -41,65 +60,65 @@ function initSidebar() {
     if (e.key === "Escape" && sidebar.classList.contains("active")) {
       closeSidebar();
     }
+
+    if (e.key === "Tab" && sidebar.classList.contains("active")) {
+      const focusableElements = sidebar.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+
+      if (focusableElements.length > 0) {
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey && document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement.focus();
+        } else if (!e.shiftKey && document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement.focus();
+        }
+      }
+    }
   });
 
-  const toggleSection = (contentElement, arrowElement) => {
-    if (!contentElement || !arrowElement) return;
+  const toggleSection = (toggleButton, contentElement, arrowElement) => {
+    if (!contentElement || !arrowElement || !toggleButton) return;
 
     const isVisible = !contentElement.classList.contains("hidden");
     contentElement.classList.toggle("hidden");
+
     arrowElement.textContent = isVisible ? "⌄" : "˄";
+    toggleButton.setAttribute("aria-expanded", isVisible ? "false" : "true");
   };
 
   if (movieToggle && movieLinks && movieArrow) {
     movieToggle.addEventListener("click", () => {
-      toggleSection(movieLinks, movieArrow);
+      toggleSection(movieToggle, movieLinks, movieArrow);
+    });
+
+    movieToggle.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        toggleSection(movieToggle, movieLinks, movieArrow);
+      }
     });
   }
 
   if (seasonToggle && seasonLinks && seasonArrow) {
     seasonToggle.addEventListener("click", () => {
-      toggleSection(seasonLinks, seasonArrow);
+      toggleSection(seasonToggle, seasonLinks, seasonArrow);
+    });
+
+    seasonToggle.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        toggleSection(seasonToggle, seasonLinks, seasonArrow);
+      }
     });
   }
 
-  const loadData = (url, container, linkTemplate) => {
-    if (!container) return Promise.reject(new Error(`Container not found`));
-
-    container.innerHTML = '<p style="opacity: 0.6;">Loading...</p>';
-
-    return fetch(url)
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-        return res.json();
-      })
-      .then(data => {
-        if (!Array.isArray(data) || data.length === 0) {
-          container.innerHTML = '<p style="opacity: 0.6;">No items available</p>';
-          return;
-        }
-
-        container.innerHTML = '';
-        const fragment = document.createDocumentFragment();
-
-        data.forEach((item, i) => {
-          const link = document.createElement('a');
-          link.href = linkTemplate(i);
-          link.textContent = item.title || `Item ${i+1}`;
-          link.setAttribute("data-title", item.title || '');
-          fragment.appendChild(link);
-        });
-
-        container.appendChild(fragment);
-      })
-      .catch(err => {
-        console.error(`Failed to load data from ${url}:`, err);
-        container.innerHTML = `<p style="color: red;">Failed to load data.</p>`;
-      });
-  };
-
   if (movieLinks) {
-    loadData(
+    loadSidebarData(
       './data/movie_data.json', 
       movieLinks, 
       (i) => `./movie.html?movie=${i}`
@@ -107,7 +126,7 @@ function initSidebar() {
   }
 
   if (seasonLinks) {
-    loadData(
+    loadSidebarData(
       './data/episodes_data.json', 
       seasonLinks, 
       (i) => `./episodes.html?season=${i}`
@@ -115,20 +134,53 @@ function initSidebar() {
   }
 
   if (searchInput && sidebarLinks) {
-    let debounceTimer;
+    const performSearch = debounce(() => {
+      const query = searchInput.value.toLowerCase().trim();
+      const allLinks = sidebarLinks.querySelectorAll("a");
+      let visibleCount = 0;
 
-    searchInput.addEventListener("input", () => {
-      clearTimeout(debounceTimer);
+      allLinks.forEach(link => {
+        const title = (link.getAttribute("data-title") || "").toLowerCase();
+        const isVisible = title.includes(query);
+        link.style.display = isVisible ? "block" : "none";
+        if (isVisible) visibleCount++;
+      });
 
-      debounceTimer = setTimeout(() => {
-        const query = searchInput.value.toLowerCase().trim();
-        const allLinks = sidebarLinks.querySelectorAll("a");
+      if (searchResultsStatus) {
+        searchResultsStatus.textContent = visibleCount === 0 
+          ? "No results found" 
+          : `Found ${visibleCount} result${visibleCount !== 1 ? 's' : ''}`;
+      }
 
-        allLinks.forEach(link => {
-          const title = (link.getAttribute("data-title") || "").toLowerCase();
-          link.style.display = title.includes(query) ? "block" : "none";
-        });
-      }, 200);
+      const sections = [movieLinks, seasonLinks];
+      sections.forEach(section => {
+        if (!section) return;
+
+        const existingMsg = section.querySelector('.no-results');
+        if (existingMsg) section.removeChild(existingMsg);
+
+        const sectionLinks = section.querySelectorAll('a');
+        const hasVisibleLinks = Array.from(sectionLinks).some(link => 
+          link.style.display !== 'none'
+        );
+
+        if (!hasVisibleLinks && query && sectionLinks.length > 0) {
+          const noResults = document.createElement('p');
+          noResults.textContent = 'No matching results';
+          noResults.className = 'no-results';
+          noResults.setAttribute('role', 'status');
+          section.appendChild(noResults);
+        }
+      });
+    }, 200);
+
+    searchInput.addEventListener("input", performSearch);
+
+    searchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        searchInput.value = '';
+        performSearch();
+      }
     });
   }
 }
