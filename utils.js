@@ -333,14 +333,21 @@ const initTheme = () => {
   const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
 
   const savedTheme = localStorage.getItem('theme');
-  const isDarkMode = savedTheme ? savedTheme === 'dark' : prefersDarkScheme.matches;
 
-  document.body.classList.toggle('light-mode', !isDarkMode);
+  document.body.classList.remove('light-mode', 'oled-mode');
+
+  if (savedTheme === 'light') {
+    document.body.classList.add('light-mode');
+  } else if (savedTheme === 'oled') {
+    document.body.classList.add('oled-mode');
+  } else if (!savedTheme && !prefersDarkScheme.matches) {
+    document.body.classList.add('light-mode');
+  }
 
   const themeToggle = document.getElementById('theme-toggle');
   if (themeToggle) {
-    themeToggle.innerHTML = isDarkMode ? '☀️' : '🌙';
-    themeToggle.setAttribute('aria-label', isDarkMode ? 'Switch to light mode' : 'Switch to dark mode');
+    const currentTheme = savedTheme || (prefersDarkScheme.matches ? 'dark' : 'light');
+    updateThemeToggleButton(themeToggle, currentTheme);
   }
 
   if (!savedTheme) {
@@ -349,26 +356,66 @@ const initTheme = () => {
         document.body.classList.toggle('light-mode', !e.matches);
 
         if (themeToggle) {
-          themeToggle.innerHTML = e.matches ? '☀️' : '🌙';
-          themeToggle.setAttribute('aria-label', e.matches ? 'Switch to light mode' : 'Switch to dark mode');
+          updateThemeToggleButton(themeToggle, e.matches ? 'dark' : 'light');
         }
       }
     });
   }
 
-  return { isDarkMode, prefersDarkScheme };
+  return { savedTheme, prefersDarkScheme };
+};
+
+const updateThemeToggleButton = (button, theme) => {
+  if (!button) return;
+
+  let icon, label;
+
+  if (theme === 'light') {
+    icon = '☀️';
+    label = 'Switch to dark mode';
+  } else if (theme === 'dark') {
+    icon = '🔅';
+    label = 'Switch to OLED mode';
+  } else if (theme === 'oled') {
+    icon = '🌙';
+    label = 'Switch to light mode';
+  }
+
+  button.innerHTML = icon;
+  button.setAttribute('aria-label', label);
 };
 
 const toggleTheme = () => {
-  const isCurrentlyDark = !document.body.classList.contains('light-mode');
-  document.body.classList.toggle('light-mode');
+  let currentTheme = 'dark';
 
-  localStorage.setItem('theme', isCurrentlyDark ? 'light' : 'dark');
+  if (document.body.classList.contains('light-mode')) {
+    currentTheme = 'light';
+  } else if (document.body.classList.contains('oled-mode')) {
+    currentTheme = 'oled';
+  }
+
+  let nextTheme;
+  if (currentTheme === 'light') {
+    nextTheme = 'dark';
+  } else if (currentTheme === 'dark') {
+    nextTheme = 'oled';
+  } else if (currentTheme === 'oled') {
+    nextTheme = 'light';
+  }
+
+  document.body.classList.remove('light-mode', 'oled-mode');
+
+  if (nextTheme === 'light') {
+    document.body.classList.add('light-mode');
+  } else if (nextTheme === 'oled') {
+    document.body.classList.add('oled-mode');
+  }
+
+  localStorage.setItem('theme', nextTheme);
 
   const themeToggle = document.getElementById('theme-toggle');
   if (themeToggle) {
-    themeToggle.innerHTML = isCurrentlyDark ? '🌙' : '☀️';
-    themeToggle.setAttribute('aria-label', isCurrentlyDark ? 'Switch to dark mode' : 'Switch to light mode');
+    updateThemeToggleButton(themeToggle, nextTheme);
   }
 };
 
