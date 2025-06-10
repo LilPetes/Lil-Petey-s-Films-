@@ -132,27 +132,32 @@
           episodeElement.appendChild(descriptionElement);
 
           if (episode.embed_link) {
-            const iframeWrapper = document.createElement('div');
-            iframeWrapper.className = 'iframe-wrapper';
-            iframeWrapper.style.position = 'relative';
-            iframeWrapper.style.paddingBottom = '56.25%';
-            iframeWrapper.style.height = '0';
-            iframeWrapper.style.overflow = 'hidden';
+            const videoWrapper = document.createElement('div');
+            videoWrapper.className = 'video-wrapper';
+            videoWrapper.style.position = 'relative';
+            videoWrapper.style.paddingBottom = '56.25%'; // 16:9 aspect ratio
+            videoWrapper.style.height = '0';
+            videoWrapper.style.overflow = 'hidden';
 
-            const iframeElement = document.createElement('iframe');
-            iframeElement.src = episode.embed_link;
-            iframeElement.style.position = 'absolute';
-            iframeElement.style.top = '0';
-            iframeElement.style.left = '0';
-            iframeElement.style.width = '100%';
-            iframeElement.style.height = '100%';
-            iframeElement.style.border = 'none';
-            iframeElement.title = episode.title || `Episode ${index + 1}`;
-            iframeElement.loading = 'lazy';
-            iframeElement.allowFullscreen = true;
+            const videoElement = document.createElement('video');
+            videoElement.controls = true;
+            videoElement.style.position = 'absolute';
+            videoElement.style.top = '0';
+            videoElement.style.left = '0';
+            videoElement.style.width = '100%';
+            videoElement.style.height = '100%';
+            videoElement.style.objectFit = 'cover'; // Keeps aspect ratio inside container
+            videoElement.title = episode.title || `Episode ${index + 1}`;
+            videoElement.loading = 'lazy'; // Optional: lazy loading
+            videoElement.poster = episode.thumbnail || 'placeholder.jpg'; // Add fallback if no thumbnail
 
-            iframeWrapper.appendChild(iframeElement);
-            episodeElement.appendChild(iframeWrapper);
+            const sourceElement = document.createElement('source');
+            sourceElement.src = episode.embed_link;
+            sourceElement.type = 'video/mp4'; // Adjust MIME type if needed
+
+            videoElement.appendChild(sourceElement);
+            videoWrapper.appendChild(videoElement);
+            episodeElement.appendChild(videoWrapper);
           } else {
             const unavailableMsg = document.createElement('p');
             unavailableMsg.textContent = 'Video unavailable';

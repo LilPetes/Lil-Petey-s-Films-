@@ -12,6 +12,5 @@ def clean_lines(input_path='data.txt', output_path='cleaned_data.txt'):
         file.writelines(cleaned_lines)
 
     print(f"Cleaned lines written to {output_path}")
-
-# Run the function
+    
 clean_lines()
