@@ -102,6 +102,51 @@
               window.location.href = `./${page}?${paramName}=${index}`;
             }
           });
+
+          if (item.embed_link && window.utils.createPreviewVideo) {
+            let previewTimer;
+            let videoElement = null;
+
+            const setupPreview = () => {
+              if (!videoElement && item.embed_link) {
+                videoElement = window.utils.createPreviewVideo(item.embed_link, item.title || 'Preview');
+                if (videoElement) {
+                  card.appendChild(videoElement);
+                }
+              }
+            };
+
+            const startPreview = () => {
+              setupPreview();
+              clearTimeout(previewTimer);
+
+              previewTimer = setTimeout(() => {
+                if (videoElement) {
+                  videoElement.currentTime = Math.max(videoElement.duration / 2 - 10, 0);
+                  videoElement.play()
+                    .then(() => {
+                      videoElement.classList.add('active');
+                    })
+                    .catch(err => {
+                      console.warn('Preview video playback failed:', err);
+                    });
+                }
+              }, 1000);
+            };
+
+            const stopPreview = () => {
+              clearTimeout(previewTimer);
+              if (videoElement) {
+                videoElement.classList.remove('active');
+                videoElement.pause();
+              }
+            };
+
+            card.addEventListener('mouseenter', startPreview);
+            card.addEventListener('mouseleave', stopPreview);
+            card.addEventListener('focus', startPreview);
+            card.addEventListener('blur', stopPreview);
+          }
         }
 
         const img = document.createElement('img');
@@ -202,7 +247,17 @@
         }
 
         if (episodesResult.status === 'fulfilled') {
-          renderGallery(episodesResult.value, 'episodes-gallery', 'episodes.html', 'season');
+          const processedEpisodes = episodesResult.value.map((season, index) => {
+            const firstEpisodeEmbed = season.embed_links && season.embed_links.length > 0 ? 
+              season.embed_links[0].embed_link : null;
+
+            return {
+              ...season,
+              embed_link: firstEpisodeEmbed
+            };
+          });
+
+          renderGallery(processedEpisodes, 'episodes-gallery', 'episodes.html', 'season');
         } else {
           handleError(
             episodesResult.reason,

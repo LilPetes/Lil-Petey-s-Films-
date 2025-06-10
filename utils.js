@@ -419,6 +419,33 @@ const toggleTheme = () => {
   }
 };
 
+const createPreviewVideo = (src, title) => {
+  if (!src) return null;
+
+  const video = document.createElement('video');
+  video.muted = true;
+  video.loop = true;
+  video.playsInline = true;
+  video.disablePictureInPicture = true;
+  video.className = 'preview-video';
+  video.style.width = '100%';
+  video.style.height = '100%';
+  video.style.objectFit = 'cover';
+  video.style.position = 'absolute';
+  video.style.top = '0';
+  video.style.left = '0';
+  video.style.opacity = '0';
+  video.style.transition = 'opacity 0.5s';
+  video.setAttribute('aria-hidden', 'true');
+
+  const source = document.createElement('source');
+  source.src = src;
+  source.type = 'video/mp4';
+  video.appendChild(source);
+
+  return video;
+};
+
 window.utils = {
   getElement,
   getElementById,
@@ -430,6 +457,7 @@ window.utils = {
   createImage,
   createIframe,
   createVideo,
+  createPreviewVideo,
   sanitizeHTML,
   renderMediaPage,
   loadSidebarData,
