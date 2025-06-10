@@ -1,3 +1,14 @@
+  window.addEventListener('keydown', function(e) {
+  if ((e.key === 'f' || e.key === 'F') && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (window.focusSidebarSearch) {
+      window.focusSidebarSearch();
+    }
+    return false;
+  }
+  }, true);
+
 function initSidebar() {
   if (!window.utils) {
     console.error('utils.js is not loaded properly');
@@ -5,6 +16,27 @@ function initSidebar() {
   }
 
   const { getElementById: getElement, loadSidebarData, debounce, initTheme, toggleTheme } = window.utils;
+
+  const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+
+  const createSearchTooltip = () => {
+    const tooltipEl = document.createElement('div');
+    tooltipEl.className = 'search-tooltip';
+    tooltipEl.innerHTML = `Search with <span class="key">${isMac ? '⌘' : 'Ctrl'}</span>+<span class="key">F</span>`;
+    document.body.appendChild(tooltipEl);
+
+    setTimeout(() => {
+      tooltipEl.classList.add('visible');
+
+      setTimeout(() => {
+        tooltipEl.classList.remove('visible');
+      }, 3000);
+    }, 1000);
+
+    return tooltipEl;
+  };
+
+  const searchTooltip = createSearchTooltip();
 
   initTheme();
 
@@ -58,9 +90,30 @@ function initSidebar() {
   if (closeBtn) closeBtn.addEventListener("click", closeSidebar);
   if (overlay) overlay.addEventListener("click", closeSidebar);
 
+  const focusSidebarSearch = () => {
+    if (!sidebar.classList.contains("active")) {
+      openSidebar();
+    }
+
+    setTimeout(() => {
+      if (searchInput) {
+        searchInput.focus();
+        searchInput.select();
+      }
+    }, 150);
+  };
+
+  window.focusSidebarSearch = focusSidebarSearch;
+
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && sidebar.classList.contains("active")) {
       closeSidebar();
+    }
+
+    if ((e.key === 'f' || e.key === 'F') && (e.ctrlKey || e.metaKey)) {
+      e.stopPropagation();
+      focusSidebarSearch();
+      return false;
     }
 
     if (e.key === "Tab" && sidebar.classList.contains("active")) {
@@ -141,6 +194,8 @@ function initSidebar() {
       }
 
   if (searchInput && sidebarLinks) {
+    searchInput.placeholder = `Search... (${isMac ? '⌘' : 'Ctrl'}+F)`;
+
     const performSearch = debounce(() => {
       const query = searchInput.value.toLowerCase().trim();
       const allLinks = sidebarLinks.querySelectorAll("a");
@@ -188,6 +243,14 @@ function initSidebar() {
         searchInput.value = '';
         performSearch();
       }
+    });
+
+    searchInput.addEventListener("mouseenter", () => {
+      searchTooltip.classList.add('visible');
+    });
+
+    searchInput.addEventListener("mouseleave", () => {
+      searchTooltip.classList.remove('visible');
     });
   }
 }

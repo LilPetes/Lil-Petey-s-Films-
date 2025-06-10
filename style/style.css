@@ -604,3 +604,40 @@ button:hover,
 .oled-mode .theme-toggle:hover {
   background-color: rgba(70, 70, 70, 0.7);
 }
+
+/* Search tooltip styles */
+.search-tooltip {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 10px 15px;
+  border-radius: 5px;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1000;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.search-tooltip.visible {
+  opacity: 1;
+}
+
+.light-mode .search-tooltip {
+  background-color: rgba(50, 50, 50, 0.9);
+}
+
+.key {
+  display: inline-block;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  padding: 1px 6px;
+  margin: 0 3px;
+  font-family: monospace;
+  font-weight: bold;
+}
