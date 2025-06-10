@@ -329,6 +329,49 @@ const loadSidebarData = (url, container, linkTemplate) => {
     });
 };
 
+const initTheme = () => {
+  const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+  const savedTheme = localStorage.getItem('theme');
+  const isDarkMode = savedTheme ? savedTheme === 'dark' : prefersDarkScheme.matches;
+
+  document.body.classList.toggle('light-mode', !isDarkMode);
+
+  const themeToggle = document.getElementById('theme-toggle');
+  if (themeToggle) {
+    themeToggle.innerHTML = isDarkMode ? '☀️' : '🌙';
+    themeToggle.setAttribute('aria-label', isDarkMode ? 'Switch to light mode' : 'Switch to dark mode');
+  }
+
+  if (!savedTheme) {
+    prefersDarkScheme.addEventListener('change', (e) => {
+      if (!localStorage.getItem('theme')) {
+        document.body.classList.toggle('light-mode', !e.matches);
+
+        if (themeToggle) {
+          themeToggle.innerHTML = e.matches ? '☀️' : '🌙';
+          themeToggle.setAttribute('aria-label', e.matches ? 'Switch to light mode' : 'Switch to dark mode');
+        }
+      }
+    });
+  }
+
+  return { isDarkMode, prefersDarkScheme };
+};
+
+const toggleTheme = () => {
+  const isCurrentlyDark = !document.body.classList.contains('light-mode');
+  document.body.classList.toggle('light-mode');
+
+  localStorage.setItem('theme', isCurrentlyDark ? 'light' : 'dark');
+
+  const themeToggle = document.getElementById('theme-toggle');
+  if (themeToggle) {
+    themeToggle.innerHTML = isCurrentlyDark ? '🌙' : '☀️';
+    themeToggle.setAttribute('aria-label', isCurrentlyDark ? 'Switch to dark mode' : 'Switch to light mode');
+  }
+};
+
 window.utils = {
   getElement,
   getElementById,
@@ -342,5 +385,7 @@ window.utils = {
   createVideo,
   sanitizeHTML,
   renderMediaPage,
-  loadSidebarData
+  loadSidebarData,
+  initTheme,
+  toggleTheme
 };

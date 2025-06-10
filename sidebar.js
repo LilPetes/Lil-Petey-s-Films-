@@ -4,7 +4,9 @@ function initSidebar() {
     return;
   }
 
-  const { getElementById: getElement, loadSidebarData, debounce } = window.utils;
+  const { getElementById: getElement, loadSidebarData, debounce, initTheme, toggleTheme } = window.utils;
+
+  initTheme();
 
   const toggle = getElement("menu-toggle");
   const sidebar = getElement("sidebar");
@@ -132,6 +134,11 @@ function initSidebar() {
       (i) => `./episodes.html?season=${i}`
     );
   }
+
+      const themeToggle = getElement('theme-toggle');
+      if (themeToggle) {
+    themeToggle.addEventListener('click', toggleTheme);
+      }
 
   if (searchInput && sidebarLinks) {
     const performSearch = debounce(() => {
