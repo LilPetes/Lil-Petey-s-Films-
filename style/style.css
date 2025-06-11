@@ -624,6 +624,13 @@ button:hover,
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
+/* Hide search tooltip on mobile devices */
+@media (max-width: 768px) {
+  .search-tooltip {
+    display: none;
+  }
+}
+
 .search-tooltip.visible {
   opacity: 1;
 }

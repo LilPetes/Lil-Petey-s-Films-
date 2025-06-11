@@ -18,8 +18,11 @@ function initSidebar() {
   const { getElementById: getElement, loadSidebarData, debounce, initTheme, toggleTheme } = window.utils;
 
   const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
   const createSearchTooltip = () => {
+    if (isMobile) return null;
+
     const tooltipEl = document.createElement('div');
     tooltipEl.className = 'search-tooltip';
     tooltipEl.innerHTML = `Search with <span class="key">${isMac ? '⌘' : 'Ctrl'}</span>+<span class="key">F</span>`;
@@ -194,7 +197,7 @@ function initSidebar() {
       }
 
   if (searchInput && sidebarLinks) {
-    searchInput.placeholder = `Search... (${isMac ? '⌘' : 'Ctrl'}+F)`;
+    searchInput.placeholder = isMobile ? "Search..." : `Search... (${isMac ? '⌘' : 'Ctrl'}+F)`;
 
     const performSearch = debounce(() => {
       const query = searchInput.value.toLowerCase().trim();
@@ -246,11 +249,11 @@ function initSidebar() {
     });
 
     searchInput.addEventListener("mouseenter", () => {
-      searchTooltip.classList.add('visible');
+      if (searchTooltip) searchTooltip.classList.add('visible');
     });
 
     searchInput.addEventListener("mouseleave", () => {
-      searchTooltip.classList.remove('visible');
+      if (searchTooltip) searchTooltip.classList.remove('visible');
     });
   }
 }
