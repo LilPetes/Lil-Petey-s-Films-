@@ -25,6 +25,8 @@ function initSidebar() {
   const createSearchTooltip = () => {
     if (isMobile) return null;
 
+    if (localStorage.getItem('searchTooltipShown')) return null;
+
     const tooltipEl = document.createElement('div');
     tooltipEl.className = 'search-tooltip';
     tooltipEl.innerHTML = `Search with <span class="key">${isMac ? '⌘' : 'Ctrl'}</span>+<span class="key">F</span> | Navigate with <span class="key">↑</span><span class="key">↓</span>`;
@@ -32,7 +34,7 @@ function initSidebar() {
 
     setTimeout(() => {
       tooltipEl.classList.add('visible');
-
+      localStorage.setItem('searchTooltipShown', '1');
       setTimeout(() => {
         tooltipEl.classList.remove('visible');
       }, 3000);
