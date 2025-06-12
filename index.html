@@ -39,6 +39,13 @@
 
     <section>
       <h2 class="section-title">Episodes</h2>
+      <div class="sort-controls">
+        <label for="episodes-sort">Sort by:</label>
+        <select id="episodes-sort">
+          <option value="default">Default</option>
+          <option value="title">Title</option>
+        </select>
+      </div>
       <div class="gallery" id="episodes-gallery" aria-label="Episodes list">
         <p style="color: gray;" aria-live="polite">Loading episodes...</p>
       </div>
@@ -46,6 +53,13 @@
 
     <section>
       <h2 class="section-title">Movies</h2>
+      <div class="sort-controls">
+        <label for="movie-sort">Sort by:</label>
+        <select id="movie-sort">
+          <option value="default">Default</option>
+          <option value="title">Title</option>
+        </select>
+      </div>
       <div class="gallery" id="movie-gallery" aria-label="Movies list">
         <p style="color: gray;" aria-live="polite">Loading movies...</p>
       </div>
@@ -218,6 +232,38 @@
         gallery.appendChild(fragment);
       };
 
+      let moviesData = [];
+      let episodesData = [];
+      let episodesOriginal = [];
+      let moviesOriginal = [];
+
+      function sortItems(items, sortType) {
+        if (sortType === 'title') {
+          return [...items].sort((a, b) => {
+            const tA = (a.title || '').toLowerCase();
+            const tB = (b.title || '').toLowerCase();
+            return tA.localeCompare(tB);
+          });
+        }
+        return [...items];
+      }
+
+      const movieSort = getElement('movie-sort');
+      const episodesSort = getElement('episodes-sort');
+
+      if (movieSort) {
+        movieSort.addEventListener('change', () => {
+          const sorted = sortItems(moviesData, movieSort.value);
+          renderGallery(sorted, 'movie-gallery', 'movie.html', 'movie');
+        });
+      }
+      if (episodesSort) {
+        episodesSort.addEventListener('change', () => {
+          const sorted = sortItems(episodesData, episodesSort.value);
+          renderGallery(sorted, 'episodes-gallery', 'episodes.html', 'season');
+        });
+      }
+
       try {
         const loadingStatuses = ['movie-gallery', 'coming-soon-gallery', 'episodes-gallery'].map(id => {
           const container = getElement(id);
@@ -240,7 +286,9 @@
         const [moviesResult, upcomingResult, episodesResult] = results;
 
         if (moviesResult.status === 'fulfilled') {
-          renderGallery(moviesResult.value, 'movie-gallery', 'movie.html', 'movie');
+          moviesData = moviesResult.value;
+          moviesOriginal = [...moviesResult.value];
+          renderGallery(sortItems(moviesData, movieSort ? movieSort.value : 'default'), 'movie-gallery', 'movie.html', 'movie');
         } else {
           handleError(
             moviesResult.reason,
@@ -260,8 +308,8 @@
         }
 
         if (episodesResult.status === 'fulfilled') {
-          const processedEpisodes = episodesResult.value.map((season, index) => {
-            const firstEpisodeEmbed = season.embed_links && season.embed_links.length > 0 ? 
+          episodesData = episodesResult.value.map((season, index) => {
+            const firstEpisodeEmbed = season.embed_links && season.embed_links.length > 0 ?
               season.embed_links[0].embed_link : null;
 
             return {
@@ -269,8 +317,8 @@
               embed_link: firstEpisodeEmbed
             };
           });
-
-          renderGallery(processedEpisodes, 'episodes-gallery', 'episodes.html', 'season');
+          episodesOriginal = [...episodesData];
+          renderGallery(sortItems(episodesData, episodesSort ? episodesSort.value : 'default'), 'episodes-gallery', 'episodes.html', 'season');
         } else {
           handleError(
             episodesResult.reason,

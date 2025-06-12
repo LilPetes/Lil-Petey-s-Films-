@@ -489,6 +489,50 @@ html.dark-theme button.collapsible-header:focus {
   margin-top: 20px;
 }
 
+/* Sort controls styling */
+.sort-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5em;
+  margin: 18px 0 18px 0;
+}
+
+.sort-controls label {
+  font-weight: 500;
+  color: var(--text-color);
+  margin-right: 0.5em;
+  font-size: 1.1em;
+}
+
+.sort-controls select {
+  padding: 6px 18px 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--text-color);
+  font-size: 1em;
+  transition: background 0.3s, color 0.3s, border-color 0.3s;
+  outline: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+.sort-controls select:focus {
+  border-color: var(--focus-outline);
+  box-shadow: 0 0 0 2px var(--focus-shadow);
+}
+
+@media (max-width: 600px) {
+  .sort-controls {
+    flex-direction: column;
+    gap: 0.2em;
+  }
+  .sort-controls label {
+    margin-right: 0;
+    margin-bottom: 2px;
+  }
+}
+
 /* Responsive styles */
 @media (min-width: 768px) {
   .content-section {
