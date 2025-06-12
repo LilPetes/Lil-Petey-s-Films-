@@ -111,13 +111,13 @@ function initSidebar() {
   };
 
   window.focusSidebarSearch = focusSidebarSearch;
-
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && sidebar.classList.contains("active")) {
       closeSidebar();
     }
 
     if ((e.key === 'f' || e.key === 'F') && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
       e.stopPropagation();
       focusSidebarSearch();
       return false;
