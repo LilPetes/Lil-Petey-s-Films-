@@ -11,23 +11,50 @@
     .header-background {
       background-image: url('https://thumbnail');
     }
+    .error-message {
+      color: #d32f2f;
+      font-size: 1.2rem;
+      text-align: center;
+      padding: 20px;
+      background-color: #ffebee;
+      border-radius: 4px;
+      margin: 20px 0;
+      white-space: pre-wrap;
+    }
+    .error-message a {
+      color: #1976d2;
+      text-decoration: underline;
+      font-weight: bold;
+    }
+    .error-message a:hover {
+      text-decoration: none;
+    }
+    .content-text {
+      text-align: center;
+    }
+    .content-text pre {
+      white-space: pre-wrap;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
 
-  <div class="header-container">
-    <div class="header-background"></div>
-    <div class="header-text">Season</div>
-  </div>
-
-  <div class="content-section">
-    <img src="" alt="Image">
-    <div class="content-text">
-      <pre>This page does not exist</pre>
+  <main>
+    <div class="header-container">
+      <div class="header-background" role="img" aria-label="Season background image"></div>
+      <h1 class="header-text">Season</h1>
     </div>
-  </div>
 
-  <div id="episodes-list"></div>
+    <div class="content-section">
+      <img src="" alt="Season thumbnail" loading="lazy">
+      <div class="content-text">
+        <pre role="alert" class="error-message">Invalid season ID. Please <a href="./index.html">return to the home page</a>.</pre>
+      </div>
+    </div>
+
+    <section id="episodes-list" aria-label="Episodes list"></section>
+  </main>
 
   <div id="sidebar-container"></div>
   <script src="./utils.js"></script>
@@ -45,137 +72,96 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
-      const { getElement, updateElement } = window.utils;
-
-      const showError = (message) => {
-        updateElement('.header-text', el => el.textContent = 'Error');
-        updateElement('.content-text pre', el => {
-          el.textContent = message || 'Failed to load season data. Please try again later.';
-          el.style.color = 'red';
-        });
-
-        const episodesList = getElement('#episodes-list');
-        if (episodesList) episodesList.innerHTML = '';
-      };
-
-      const params = new URLSearchParams(window.location.search);
-      const seasonIndex = parseInt(params.get('season'), 10);
-
-      if (isNaN(seasonIndex)) {
-        showError('Invalid season ID. Please return to the home page.');
+      if (!window.utils) {
+        console.error('utils.js is not loaded properly');
         return;
       }
 
-      try {
-        const response = await fetch('./data/episodes_data.json');
-        if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+      window.utils.initTheme();
 
-        const data = await response.json();
-        if (!Array.isArray(data)) throw new Error('Invalid data format');
+      const { renderMediaPage, createVideo, getElement, handleError, sanitizeHTML } = window.utils;
 
-        const season = data[seasonIndex];
-        if (!season) throw new Error(`Season with ID ${seasonIndex} not found`);
+      const containers = {
+        errorContainer: '.content-text pre',
+        headerBg: '.header-background',
+        headerText: '.header-text',
+        thumbnail: '.content-section img',
+        description: '.content-text pre'
+      };
 
-        document.title = season.title || 'Episodes';
+      const season = await renderMediaPage({
+        mediaType: 'season',
+        dataUrl: './data/episodes_data.json',
+        paramName: 'season',
+        containers
+      });
 
-        let metaDesc = document.querySelector('meta[name="description"]');
-        if (metaDesc) {
-          metaDesc.setAttribute('content', `Watch ${season.title} - ${season.description?.substring(0, 100) || ''}...`);
-        }
+      if (!season) return;
 
-        updateElement('.header-background', el => {
-          el.style.backgroundImage = `url('${season.thumbnail || ''}')`;        
-        });
+      const episodesList = getElement('#episodes-list');
+      if (!episodesList) return;
 
-        updateElement('.header-text', el => {
-          el.textContent = season.title || 'Untitled Season';
-        });
+      episodesList.innerHTML = '';
 
-        updateElement('.content-section img', el => {
-          el.src = season.thumbnail || '';
-          el.alt = season.title || 'Season thumbnail';
-          el.onerror = () => {
-            el.src = 'placeholder.jpg';
-            el.onerror = null;
-          };
-        });
+      if (!Array.isArray(season.embed_links) || season.embed_links.length === 0) {
+        const noEpisodes = document.createElement('p');
+        noEpisodes.textContent = 'No episodes available for this season.';
+        noEpisodes.style.textAlign = 'center';
+        noEpisodes.style.color = '#999';
+        noEpisodes.setAttribute('role', 'status');
+        episodesList.appendChild(noEpisodes);
+        return;
+      }
 
-        updateElement('.content-text pre', el => {
-          el.textContent = season.description || 'No description available';
-        });
+      const fragment = document.createDocumentFragment();
 
-        const episodesList = getElement('#episodes-list');
-        if (!episodesList) return;
+      season.embed_links.forEach((episode, index) => {
+        if (!episode) return;
 
-        episodesList.innerHTML = '';
+        const episodeElement = document.createElement('article');
+        episodeElement.className = 'episode';
+        episodeElement.setAttribute('aria-labelledby', `episode-title-${index}`);
 
-        if (!Array.isArray(season.embed_links) || season.embed_links.length === 0) {
-          episodesList.innerHTML = '<p style="text-align: center; color: #999;">No episodes available for this season.</p>';
-          return;
-        }
+        const titleElement = document.createElement('h2');
+        titleElement.id = `episode-title-${index}`;
+        titleElement.textContent = episode.title || `Episode ${index + 1}`;
 
-        const fragment = document.createDocumentFragment();
+        const descriptionElement = document.createElement('p');
 
-        season.embed_links.forEach((episode, index) => {
-          if (!episode) return;
+        const safeDescription = sanitizeHTML(episode.description || 'No description available');
+        descriptionElement.textContent = safeDescription;
 
-          const episodeElement = document.createElement('div');
-          episodeElement.className = 'episode';
+        episodeElement.appendChild(titleElement);
+        episodeElement.appendChild(descriptionElement);
 
-          const titleElement = document.createElement('h2');
-          titleElement.textContent = episode.title || `Episode ${index + 1}`;
+        if (episode.embed_link) {
+          const videoElement = createVideo(
+            episode.embed_link,
+            episode.title || `Episode ${index + 1}`,
+            episode.thumbnail || 'placeholder.jpg'
+          );
 
-          const descriptionElement = document.createElement('p');
-          descriptionElement.textContent = episode.description || 'No description available';
-
-          episodeElement.appendChild(titleElement);
-          episodeElement.appendChild(descriptionElement);
-
-          if (episode.embed_link) {
-            const videoWrapper = document.createElement('div');
-            videoWrapper.className = 'video-wrapper';
-            videoWrapper.style.position = 'relative';
-            videoWrapper.style.paddingBottom = '56.25%'; // 16:9 aspect ratio
-            videoWrapper.style.height = '0';
-            videoWrapper.style.overflow = 'hidden';
-
-            const videoElement = document.createElement('video');
-            videoElement.controls = true;
-            videoElement.style.position = 'absolute';
-            videoElement.style.top = '0';
-            videoElement.style.left = '0';
-            videoElement.style.width = '100%';
-            videoElement.style.height = '100%';
-            videoElement.style.objectFit = 'cover'; // Keeps aspect ratio inside container
-            videoElement.title = episode.title || `Episode ${index + 1}`;
-            videoElement.loading = 'lazy'; // Optional: lazy loading
-            videoElement.poster = episode.thumbnail || 'placeholder.jpg'; // Add fallback if no thumbnail
-
-            const sourceElement = document.createElement('source');
-            sourceElement.src = episode.embed_link;
-            sourceElement.type = 'video/mp4'; // Adjust MIME type if needed
-
-            videoElement.appendChild(sourceElement);
-            videoWrapper.appendChild(videoElement);
-            episodeElement.appendChild(videoWrapper);
-          } else {
-            const unavailableMsg = document.createElement('p');
-            unavailableMsg.textContent = 'Video unavailable';
-            unavailableMsg.style.color = '#999';
-            unavailableMsg.style.fontStyle = 'italic';
-            unavailableMsg.style.textAlign = 'center';
-            episodeElement.appendChild(unavailableMsg);
+          const videoChild = videoElement.querySelector('video');
+          if (videoChild) {
+            videoChild.setAttribute('aria-label', `${episode.title || `Episode ${index + 1}`} video player`);
+            videoChild.setAttribute('data-episode', index + 1);
           }
 
-          fragment.appendChild(episodeElement);
-        });
+          episodeElement.appendChild(videoElement);
+        } else {
+          const unavailableMsg = document.createElement('p');
+          unavailableMsg.textContent = 'Video unavailable';
+          unavailableMsg.style.color = '#999';
+          unavailableMsg.style.fontStyle = 'italic';
+          unavailableMsg.style.textAlign = 'center';
+          unavailableMsg.setAttribute('role', 'status');
+          episodeElement.appendChild(unavailableMsg);
+        }
 
-        episodesList.appendChild(fragment);
+        fragment.appendChild(episodeElement);
+      });
 
-      } catch (err) {
-        console.error("Failed to load or process season data:", err);
-        showError(err.message);
-      }
+      episodesList.appendChild(fragment);
     });
   </script>  
 

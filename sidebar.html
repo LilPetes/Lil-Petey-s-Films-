@@ -1,30 +1,76 @@
-<div id="menu-toggle">&#9776;</div>
+<button id="menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="sidebar">&#9776;</button>
 
-<div id="sidebar">
+<nav id="sidebar" role="navigation" aria-label="Main menu">
   <div class="sidebar-header">
     <h2>Menu</h2>
-    <span id="close-btn">&times;</span>
-  </div>
-
-  <input type="text" id="global-search" placeholder="Search..." />
-
-  <div class="sidebar-links" id="sidebar-links">
-    <a href="./index.html" data-title="Home">Home</a>
-
-    <div class="collapsible-header" id="season-toggle">
-      <span>Seasons</span><span id="season-arrow">⌄</span>
-    </div>
-    <div class="collapsible-content" id="season-links">
-      <p style="opacity: 0.6;">Loading seasons...</p>
-    </div>
-
-    <div class="collapsible-header" id="movie-toggle">
-      <span>Movies</span><span id="movie-arrow">⌄</span>
-    </div>
-    <div class="collapsible-content" id="movie-links">
-      <p style="opacity: 0.6;">Loading movies...</p>
+    <div style="display: flex; align-items: center;">
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">☀️</button>
+      <button id="close-btn" aria-label="Close menu">&times;</button>
     </div>
   </div>
-</div>
 
-<div id="overlay"></div>
+  <div class="sr-only" aria-live="polite">
+    Use arrow keys to navigate through menu items. Press Enter or Space to activate buttons and expand sections.
+  </div>
+
+  <div class="search-container">
+    <label for="global-search" class="sr-only">Search content</label>
+    <input type="text" id="global-search" placeholder="Search..." aria-label="Search content" />
+    <div id="search-results-status" class="sr-only" aria-live="polite"></div>
+  </div>
+
+  <div class="sidebar-links" id="sidebar-links" role="menu">
+    <a href="./index.html" data-title="Home" role="menuitem">Home</a>
+
+    <button class="collapsible-header" id="season-toggle" aria-expanded="false" aria-controls="season-links">
+      <span>Seasons</span><span id="season-arrow" aria-hidden="true">⌄</span>
+    </button>
+    <div class="collapsible-content" id="season-links" role="menu" aria-label="Seasons menu">
+      <p style="opacity: 0.6;" aria-live="polite">Loading seasons...</p>
+    </div>
+
+    <button class="collapsible-header" id="movie-toggle" aria-expanded="false" aria-controls="movie-links">
+      <span>Movies</span><span id="movie-arrow" aria-hidden="true">⌄</span>
+    </button>
+    <div class="collapsible-content" id="movie-links" role="menu" aria-label="Movies menu">
+      <p style="opacity: 0.6;" aria-live="polite">Loading movies...</p>
+    </div>
+  </div>
+</nav>
+
+<div id="overlay" aria-hidden="true"></div>
+
+<style>
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+#close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  font-size: 2rem;
+  line-height: 1;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 8px;
+  color: inherit;
+  transition: background 0.2s;
+  border-radius: 50%;
+}
+#close-btn:focus, #close-btn:hover {
+  background: rgba(0,0,0,0.08);
+  outline: none;
+}
+</style>
