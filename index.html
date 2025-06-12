@@ -106,23 +106,13 @@
           if (item.embed_link && window.utils.createPreviewVideo) {
             let previewTimer;
             let videoElement = null;
+            let previewStarted = false;
 
-            const setupPreview = () => {
-              if (!videoElement && item.embed_link) {
-                videoElement = window.utils.createPreviewVideo(item.embed_link, item.title || 'Preview');
-                if (videoElement) {
-                  card.appendChild(videoElement);
-                }
-              }
-            };
-
-            const startPreview = () => {
-              setupPreview();
-              clearTimeout(previewTimer);
-
-              previewTimer = setTimeout(() => {
-                if (videoElement) {
-                  videoElement.currentTime = Math.max(videoElement.duration / 2 - 10, 0);
+            const playPreview = () => {
+              if (!videoElement) return;
+              const seekAndPlay = () => {
+                try {
+                  videoElement.currentTime = Math.max((videoElement.duration || 0) / 2 - 10, 0);
                   videoElement.play()
                     .then(() => {
                       videoElement.classList.add('active');
@@ -130,6 +120,29 @@
                     .catch(err => {
                       console.warn('Preview video playback failed:', err);
                     });
+                } catch (e) {
+                  videoElement.play().catch(() => {});
+                }
+              };
+              if (videoElement.readyState >= 1) {
+                seekAndPlay();
+              } else {
+                videoElement.addEventListener('loadedmetadata', seekAndPlay, { once: true });
+              }
+            };
+
+            const startPreview = () => {
+              clearTimeout(previewTimer);
+              previewTimer = setTimeout(() => {
+                if (!previewStarted) {
+                  previewStarted = true;
+                  videoElement = window.utils.createPreviewVideo(item.embed_link, item.title || 'Preview');
+                  if (videoElement) {
+                    card.appendChild(videoElement);
+                    playPreview();
+                  }
+                } else if (videoElement) {
+                  playPreview();
                 }
               }, 1000);
             };
