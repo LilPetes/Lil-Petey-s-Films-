@@ -1,14 +1,3 @@
-  window.addEventListener('keydown', function(e) {
-  if ((e.key === 'f' || e.key === 'F') && (e.ctrlKey || e.metaKey)) {
-    e.preventDefault();
-    e.stopPropagation();
-    if (window.focusSidebarSearch) {
-      window.focusSidebarSearch();
-    }
-    return false;
-  }
-  }, true);
-
 function initSidebar() {
   if (!window.utils) {
     console.error('utils.js is not loaded properly');
@@ -24,8 +13,7 @@ function initSidebar() {
         href: linkPath,
         attributes: {
           'role': 'menuitem',
-          'data-title': item.title || `Item ${index + 1}`,
-          'aria-keyshortcuts': 'ArrowUp ArrowDown'
+          'data-title': item.title || `Item ${index + 1}`
         }
       };
     });

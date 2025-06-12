@@ -83,14 +83,14 @@ const handleError = (error, errorContainer, fallbackContent = null) => {
     errorMessage.setAttribute('role', 'alert');
     errorMessage.setAttribute('aria-live', 'assertive');
 
+    errorContainer.appendChild(errorMessage);
+
     if (fallbackContent) {
       const fallbackElement = document.createElement('div');
       fallbackElement.className = 'fallback-content';
       fallbackElement.innerHTML = fallbackContent;
       errorContainer.appendChild(fallbackElement);
     }
-
-    errorContainer.appendChild(errorMessage);
   }
 };
 
@@ -109,12 +109,12 @@ const sanitizeHTML = (html) => {
 const createImage = (src, alt, className) => {
   const img = document.createElement('img');
   img.src = src || '';
-  img.alt = alt || 'Image';
+  img.alt = alt || '';
   if (className) img.className = className;
   img.loading = 'lazy';
 
   img.setAttribute('decoding', 'async');
-  if (!alt || alt === 'Image') {
+  if (!alt) {
     img.setAttribute('role', 'presentation');
   }
 
