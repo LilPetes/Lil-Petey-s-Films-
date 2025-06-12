@@ -304,11 +304,27 @@ const loadSidebarData = (url, container, linkTemplate) => {
 
       data.forEach((item, i) => {
         const link = document.createElement('a');
-        link.href = linkTemplate(i);
-        link.textContent = item.title || `Item ${i+1}`;
-        link.setAttribute("data-title", item.title || '');
+        const linkConfig = linkTemplate(i, item);
 
-        link.setAttribute('role', 'menuitem');
+        if (typeof linkConfig === 'string') {
+          link.href = linkConfig;
+        } else if (linkConfig && typeof linkConfig === 'object') {
+          link.href = linkConfig.href || '#';
+
+          if (linkConfig.attributes) {
+            Object.entries(linkConfig.attributes).forEach(([attr, value]) => {
+              link.setAttribute(attr, value);
+            });
+          }
+        }
+
+        link.textContent = item.title || `Item ${i+1}`;
+        if (!link.hasAttribute('data-title')) {
+          link.setAttribute('data-title', item.title || '');
+        }
+        if (!link.hasAttribute('role')) {
+          link.setAttribute('role', 'menuitem');
+        }
 
         fragment.appendChild(link);
       });

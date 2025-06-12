@@ -9,6 +9,10 @@
     </div>
   </div>
 
+  <div class="sr-only" aria-live="polite">
+    Use arrow keys to navigate through menu items. Press Enter or Space to activate buttons and expand sections.
+  </div>
+
   <div class="search-container">
     <label for="global-search" class="sr-only">Search content</label>
     <input type="text" id="global-search" placeholder="Search..." aria-label="Search content" />
@@ -16,16 +20,16 @@
   </div>
 
   <div class="sidebar-links" id="sidebar-links" role="menu">
-    <a href="./index.html" data-title="Home" role="menuitem">Home</a>
+    <a href="./index.html" data-title="Home" role="menuitem" aria-keyshortcuts="ArrowUp ArrowDown">Home</a>
 
-    <button class="collapsible-header" id="season-toggle" aria-expanded="false" aria-controls="season-links">
+    <button class="collapsible-header" id="season-toggle" aria-expanded="false" aria-controls="season-links" aria-keyshortcuts="ArrowUp ArrowDown Enter Space">
       <span>Seasons</span><span id="season-arrow" aria-hidden="true">⌄</span>
     </button>
     <div class="collapsible-content" id="season-links" role="menu" aria-label="Seasons menu">
       <p style="opacity: 0.6;" aria-live="polite">Loading seasons...</p>
     </div>
 
-    <button class="collapsible-header" id="movie-toggle" aria-expanded="false" aria-controls="movie-links">
+    <button class="collapsible-header" id="movie-toggle" aria-expanded="false" aria-controls="movie-links" aria-keyshortcuts="ArrowUp ArrowDown Enter Space">
       <span>Movies</span><span id="movie-arrow" aria-hidden="true">⌄</span>
     </button>
     <div class="collapsible-content" id="movie-links" role="menu" aria-label="Movies menu">

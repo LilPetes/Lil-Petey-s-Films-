@@ -15,7 +15,21 @@ function initSidebar() {
     return;
   }
 
-  const { getElementById: getElement, loadSidebarData, debounce, initTheme, toggleTheme } = window.utils;
+  const { getElementById: getElement, loadSidebarData: originalLoadSidebarData, debounce, initTheme, toggleTheme } = window.utils;
+
+  const loadSidebarData = (url, container, linkGenerator) => {
+    return originalLoadSidebarData(url, container, (index, item) => {
+      const linkPath = linkGenerator(index, item);
+      return {
+        href: linkPath,
+        attributes: {
+          'role': 'menuitem',
+          'data-title': item.title || `Item ${index + 1}`,
+          'aria-keyshortcuts': 'ArrowUp ArrowDown'
+        }
+      };
+    });
+  };
 
   const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -25,7 +39,7 @@ function initSidebar() {
 
     const tooltipEl = document.createElement('div');
     tooltipEl.className = 'search-tooltip';
-    tooltipEl.innerHTML = `Search with <span class="key">${isMac ? '⌘' : 'Ctrl'}</span>+<span class="key">F</span>`;
+    tooltipEl.innerHTML = `Search with <span class="key">${isMac ? '⌘' : 'Ctrl'}</span>+<span class="key">F</span> | Navigate with <span class="key">↑</span><span class="key">↓</span>`;
     document.body.appendChild(tooltipEl);
 
     setTimeout(() => {
@@ -119,6 +133,55 @@ function initSidebar() {
       return false;
     }
 
+    if (!sidebar.classList.contains("active")) return;
+
+    if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+      const handledInMovies = handleSectionNavigation(e, movieLinks);
+      const handledInSeasons = handleSectionNavigation(e, seasonLinks);
+
+      if (handledInMovies || handledInSeasons) {
+        return;
+      }
+
+      e.preventDefault();
+
+      const allNavigableElements = sidebar.querySelectorAll(
+        'a[role="menuitem"], button.collapsible-header'
+      );
+
+      const navigableElements = Array.from(allNavigableElements).filter(el => {
+        if (el.style.display === 'none') return false;
+
+        if (el.tagName.toLowerCase() === 'a') {
+          const parent = el.closest('.collapsible-content');
+          if (parent && parent.classList.contains('hidden')) {
+            return false;
+          }
+        }
+
+        return true;
+      });
+
+      if (navigableElements.length === 0) return;
+
+      let currentIndex = -1;
+      for (let i = 0; i < navigableElements.length; i++) {
+        if (navigableElements[i] === document.activeElement) {
+          currentIndex = i;
+          break;
+        }
+      }
+
+      let newIndex;
+      if (e.key === "ArrowUp") {
+        newIndex = currentIndex <= 0 ? navigableElements.length - 1 : currentIndex - 1;
+      } else {
+        newIndex = currentIndex >= navigableElements.length - 1 ? 0 : currentIndex + 1;
+      }
+
+      navigableElements[newIndex].focus();
+    }
+
     if (e.key === "Tab" && sidebar.classList.contains("active")) {
       const focusableElements = sidebar.querySelectorAll(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
@@ -191,6 +254,45 @@ function initSidebar() {
     );
   }
 
+  const handleSectionNavigation = (e, sectionLinks) => {
+    if (!sectionLinks || sectionLinks.classList.contains('hidden')) return false;
+
+    const allLinks = Array.from(sectionLinks.querySelectorAll('a[role="menuitem"]'));
+    const links = allLinks.filter(link => link.style.display !== 'none');
+
+    if (links.length === 0) return false;
+
+    const isFocusInSection = links.some(link => link === document.activeElement);
+
+    if (isFocusInSection) {
+      let currentIndex = links.findIndex(link => link === document.activeElement);
+      let newIndex;
+
+      if (e.key === "ArrowUp") {
+        if (currentIndex <= 0) {
+          return false;
+        } else {
+          newIndex = currentIndex - 1;
+        }
+      } else if (e.key === "ArrowDown") {
+        if (currentIndex >= links.length - 1) {
+          return false;
+        } else {
+          newIndex = currentIndex + 1;
+        }
+      } else {
+        return false;
+      }
+
+      e.preventDefault();
+      links[newIndex].focus();
+      return true;
+    }
+
+    return false;
+  };
+
+
       const themeToggle = getElement('theme-toggle');
       if (themeToggle) {
     themeToggle.addEventListener('click', toggleTheme);
@@ -204,12 +306,29 @@ function initSidebar() {
       const allLinks = sidebarLinks.querySelectorAll("a");
       let visibleCount = 0;
 
+      const activeElement = document.activeElement;
+      let needRefocus = false;
+
       allLinks.forEach(link => {
         const title = (link.getAttribute("data-title") || "").toLowerCase();
         const isVisible = title.includes(query);
         link.style.display = isVisible ? "block" : "none";
+
+        if (link === activeElement && !isVisible) {
+          needRefocus = true;
+        }
+
         if (isVisible) visibleCount++;
       });
+
+      if (needRefocus) {
+        const firstVisible = Array.from(allLinks).find(link => link.style.display !== 'none');
+        if (firstVisible) {
+          setTimeout(() => firstVisible.focus(), 0);
+        } else {
+          setTimeout(() => searchInput.focus(), 0);
+        }
+      }
 
       if (searchResultsStatus) {
         searchResultsStatus.textContent = visibleCount === 0 
