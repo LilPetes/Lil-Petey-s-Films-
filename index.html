@@ -121,6 +121,17 @@
             let previewTimer;
             let videoElement = null;
             let previewStarted = false;
+            let volumeBtn = null;
+            let previewMuted = true;
+            try {
+              previewMuted = localStorage.getItem('previewMuted') !== 'false';
+            } catch (e) {}
+
+            const updateVolumeBtn = () => {
+              if (!volumeBtn) return;
+              volumeBtn.innerHTML = videoElement && !videoElement.muted ? '🔊' : '🔇';
+              volumeBtn.setAttribute('aria-label', videoElement && !videoElement.muted ? 'Mute preview' : 'Unmute preview');
+            };
 
             const playPreview = () => {
               if (!videoElement) return;
@@ -150,13 +161,45 @@
               previewTimer = setTimeout(() => {
                 if (!previewStarted) {
                   previewStarted = true;
-                  videoElement = window.utils.createPreviewVideo(item.embed_link, item.title || 'Preview');
+                  videoElement = window.utils.createPreviewVideo(item.embed_link, item.title || 'Preview', previewMuted);
                   if (videoElement) {
+                    volumeBtn = document.createElement('button');
+                    volumeBtn.className = 'preview-volume-btn';
+                    volumeBtn.style.position = 'absolute';
+                    volumeBtn.style.top = '8px';
+                    volumeBtn.style.right = '8px';
+                    volumeBtn.style.zIndex = '2';
+                    volumeBtn.style.background = 'rgba(0,0,0,0.5)';
+                    volumeBtn.style.border = 'none';
+                    volumeBtn.style.borderRadius = '50%';
+                    volumeBtn.style.width = '32px';
+                    volumeBtn.style.height = '32px';
+                    volumeBtn.style.display = 'flex';
+                    volumeBtn.style.alignItems = 'center';
+                    volumeBtn.style.justifyContent = 'center';
+                    volumeBtn.style.color = '#fff';
+                    volumeBtn.style.fontSize = '1.2rem';
+                    volumeBtn.style.cursor = 'pointer';
+                    volumeBtn.tabIndex = 0;
+                    updateVolumeBtn();
+                    volumeBtn.onclick = (e) => {
+                      e.stopPropagation();
+                      if (!videoElement) return;
+                      videoElement.muted = !videoElement.muted;
+                      try {
+                        localStorage.setItem('previewMuted', videoElement.muted ? 'true' : 'false');
+                      } catch (e) {}
+                      updateVolumeBtn();
+                    };
                     card.appendChild(videoElement);
+                    card.appendChild(volumeBtn);
                     playPreview();
                   }
                 } else if (videoElement) {
                   playPreview();
+                  if (volumeBtn && !card.contains(volumeBtn)) {
+                    card.appendChild(volumeBtn);
+                  }
                 }
               }, 1000);
             };
@@ -166,6 +209,9 @@
               if (videoElement) {
                 videoElement.classList.remove('active');
                 videoElement.pause();
+              }
+              if (volumeBtn && card.contains(volumeBtn)) {
+                card.removeChild(volumeBtn);
               }
             };
 

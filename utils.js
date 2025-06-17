@@ -435,11 +435,11 @@ const toggleTheme = () => {
   }
 };
 
-const createPreviewVideo = (src, title) => {
+const createPreviewVideo = (src, title, muted = true) => {
   if (!src) return null;
 
   const video = document.createElement('video');
-  video.muted = true;
+  video.muted = muted;
   video.loop = true;
   video.playsInline = true;
   video.disablePictureInPicture = true;
