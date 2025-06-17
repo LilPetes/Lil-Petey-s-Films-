@@ -206,6 +206,22 @@
               }
             };
 
+            const stopPreview = () => {
+              clearTimeout(previewTimer);
+              previewStarted = false;
+              if (videoElement) {
+                videoElement.classList.remove('active');
+                videoElement.pause();
+                videoElement.remove();
+                videoElement = null;
+              }
+              if (volumeBtn && card.contains(volumeBtn)) {
+                card.removeChild(volumeBtn);
+                volumeBtn = null;
+              }
+              window.removeEventListener('previewMuteChanged', updateVolumeBtn);
+            };
+
             const startPreview = () => {
               clearTimeout(previewTimer);
               previewTimer = setTimeout(() => {
@@ -235,18 +251,6 @@
                   }
                 }
               }, 1000);
-            };
-
-            const stopPreview = () => {
-              clearTimeout(previewTimer);
-              if (videoElement) {
-                videoElement.classList.remove('active');
-                videoElement.pause();
-              }
-              if (volumeBtn && card.contains(volumeBtn)) {
-                card.removeChild(volumeBtn);
-              }
-              window.removeEventListener('previewMuteChanged', updateVolumeBtn);
             };
 
             card.addEventListener('mouseenter', startPreview);
