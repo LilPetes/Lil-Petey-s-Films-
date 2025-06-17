@@ -435,11 +435,29 @@ const toggleTheme = () => {
   }
 };
 
+window.previewMuted = true;
+try {
+  window.previewMuted = localStorage.getItem('previewMuted') !== 'false';
+} catch (e) {}
+
+window.togglePreviewMute = function() {
+  window.previewMuted = !window.previewMuted;
+  try {
+    localStorage.setItem('previewMuted', window.previewMuted ? 'true' : 'false');
+  } catch (e) {}
+  document.querySelectorAll('.preview-video').forEach(v => v.muted = window.previewMuted);
+  document.querySelectorAll('.preview-volume-btn').forEach(btn => {
+    btn.innerHTML = window.previewMuted ? '🔇' : '🔊';
+    btn.setAttribute('aria-label', window.previewMuted ? 'Unmute preview' : 'Mute preview');
+  });
+  window.dispatchEvent(new Event('previewMuteChanged'));
+};
+
 const createPreviewVideo = (src, title, muted = true) => {
   if (!src) return null;
 
   const video = document.createElement('video');
-  video.muted = muted;
+  video.muted = typeof window.previewMuted !== 'undefined' ? window.previewMuted : muted;
   video.loop = true;
   video.playsInline = true;
   video.disablePictureInPicture = true;

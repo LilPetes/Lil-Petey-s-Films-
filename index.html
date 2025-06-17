@@ -122,19 +122,16 @@
             let videoElement = null;
             let previewStarted = false;
             let volumeBtn = null;
-            let previewMuted = true;
-            try {
-              previewMuted = localStorage.getItem('previewMuted') !== 'false';
-            } catch (e) {}
 
             const updateVolumeBtn = () => {
               if (!volumeBtn) return;
-              volumeBtn.innerHTML = videoElement && !videoElement.muted ? '🔊' : '🔇';
-              volumeBtn.setAttribute('aria-label', videoElement && !videoElement.muted ? 'Mute preview' : 'Unmute preview');
+              volumeBtn.innerHTML = window.previewMuted ? '🔇' : '🔊';
+              volumeBtn.setAttribute('aria-label', window.previewMuted ? 'Unmute preview' : 'Mute preview');
             };
 
             const playPreview = () => {
               if (!videoElement) return;
+              videoElement.muted = window.previewMuted;
               const seekAndPlay = () => {
                 try {
                   videoElement.currentTime = Math.max((videoElement.duration || 0) / 2 - 10, 0);
@@ -161,25 +158,24 @@
               previewTimer = setTimeout(() => {
                 if (!previewStarted) {
                   previewStarted = true;
-                  videoElement = window.utils.createPreviewVideo(item.embed_link, item.title || 'Preview', previewMuted);
+                  videoElement = window.utils.createPreviewVideo(item.embed_link, item.title || 'Preview');
                   if (videoElement) {
                     volumeBtn = document.createElement('button');
                     volumeBtn.className = 'preview-volume-btn';
                     updateVolumeBtn();
                     volumeBtn.onclick = (e) => {
                       e.stopPropagation();
-                      if (!videoElement) return;
-                      videoElement.muted = !videoElement.muted;
-                      try {
-                        localStorage.setItem('previewMuted', videoElement.muted ? 'true' : 'false');
-                      } catch (e) {}
-                      updateVolumeBtn();
+                      window.togglePreviewMute();
                     };
                     card.appendChild(videoElement);
                     card.appendChild(volumeBtn);
+                    window.addEventListener('previewMuteChanged', updateVolumeBtn);
                     playPreview();
                   }
                 } else if (videoElement) {
+                  window.addEventListener('previewMuteChanged', updateVolumeBtn);
+                  videoElement.muted = window.previewMuted;
+                  updateVolumeBtn();
                   playPreview();
                   if (volumeBtn && !card.contains(volumeBtn)) {
                     card.appendChild(volumeBtn);
@@ -197,6 +193,7 @@
               if (volumeBtn && card.contains(volumeBtn)) {
                 card.removeChild(volumeBtn);
               }
+              window.removeEventListener('previewMuteChanged', updateVolumeBtn);
             };
 
             card.addEventListener('mouseenter', startPreview);
