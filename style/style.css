@@ -445,6 +445,17 @@ html.dark-theme button.collapsible-header:focus {
   white-space: nowrap;
 }
 
+.movie-card .description {
+  padding: 10px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: var(--text-color);
+  text-align: left;
+}
+
 /* Movie and Episode specific styles */
 .trailer-section {
   margin: 60px auto;
