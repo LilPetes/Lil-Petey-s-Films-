@@ -165,22 +165,6 @@
                   if (videoElement) {
                     volumeBtn = document.createElement('button');
                     volumeBtn.className = 'preview-volume-btn';
-                    volumeBtn.style.position = 'absolute';
-                    volumeBtn.style.top = '8px';
-                    volumeBtn.style.right = '8px';
-                    volumeBtn.style.zIndex = '2';
-                    volumeBtn.style.background = 'rgba(0,0,0,0.5)';
-                    volumeBtn.style.border = 'none';
-                    volumeBtn.style.borderRadius = '50%';
-                    volumeBtn.style.width = '32px';
-                    volumeBtn.style.height = '32px';
-                    volumeBtn.style.display = 'flex';
-                    volumeBtn.style.alignItems = 'center';
-                    volumeBtn.style.justifyContent = 'center';
-                    volumeBtn.style.color = '#fff';
-                    volumeBtn.style.fontSize = '1.2rem';
-                    volumeBtn.style.cursor = 'pointer';
-                    volumeBtn.tabIndex = 0;
                     updateVolumeBtn();
                     volumeBtn.onclick = (e) => {
                       e.stopPropagation();
