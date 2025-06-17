@@ -412,6 +412,7 @@ html.dark-theme button.collapsible-header:focus {
 
 .preview-video {
   z-index: 1;
+  pointer-events: none;
 }
 
 .preview-video.active {
@@ -424,7 +425,9 @@ html.dark-theme button.collapsible-header:focus {
   justify-content: center;
   padding: 10px;
   gap: 6px;
-  min-height: 42px; /* Ensure consistent height */
+  min-height: 42px;
+  position: relative;
+  z-index: 2;
 }
 
 .movie-card .title {
@@ -818,4 +821,5 @@ button:hover,
   color: #fff;
   font-size: 1.2rem;
   cursor: pointer;
+  pointer-events: auto;
 }
