@@ -418,21 +418,28 @@ html.dark-theme button.collapsible-header:focus {
   opacity: 1 !important;
 }
 
-.movie-card .title {
+.movie-card .title-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 10px;
+  gap: 6px;
+  min-height: 42px; /* Ensure consistent height */
+}
+
+.movie-card .title {
+  padding: 0;
+  margin: 0;
   font-size: 1.1rem;
   color: var(--text-color);
   transition: color 0.3s ease;
 }
 
-.movie-card .description {
-  padding: 10px;
-  font-size: 0.9rem;
-  color: var(--text-color);
-  opacity: 0.8;
-  text-align: left;
-  white-space: pre-wrap;
-  transition: color 0.3s ease;
+.movie-card .watched-indicator {
+  font-size: 0.85rem;
+  margin: 0;
+  padding: 2px 4px;
+  white-space: nowrap;
 }
 
 /* Movie and Episode specific styles */
@@ -551,6 +558,40 @@ html.dark-theme button.collapsible-header:focus {
     margin-right: 0;
     margin-bottom: 2px;
   }
+}
+
+/* Watched indicator styles */
+.watched-indicator,
+.watched-indicator-sidebar {
+  display: inline-block;
+  background: none;
+  color: #2ecc40;
+  font-weight: bold;
+  font-size: 1.1em;
+  margin-left: 0.5em;
+  border-radius: 4px;
+  padding: 2px 6px;
+  transition: background 0.2s, color 0.2s;
+  user-select: none;
+}
+
+.movie-card .watched-indicator-container {
+  margin-top: -8px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.movie-card .watched-indicator {
+  font-size: 0.9rem;
+  margin: 0;
+  padding: 2px 6px;
+}
+
+.movie-card .title {
+  padding: 10px;
+  font-size: 1.1rem;
+  color: var(--text-color);
+  transition: color 0.3s ease;
 }
 
 /* Responsive styles */

@@ -4,20 +4,8 @@ function initSidebar() {
     return;
   }
 
-  const { getElementById: getElement, loadSidebarData: originalLoadSidebarData, debounce, initTheme, toggleTheme } = window.utils;
-
-  const loadSidebarData = (url, container, linkGenerator) => {
-    return originalLoadSidebarData(url, container, (index, item) => {
-      const linkPath = linkGenerator(index, item);
-      return {
-        href: linkPath,
-        attributes: {
-          'role': 'menuitem',
-          'data-title': item.title || `Item ${index + 1}`
-        }
-      };
-    });
-  };
+  const { getElementById: getElement, loadSidebarData: originalLoadSidebarData, debounce, initTheme, toggleTheme,
+    isMovieWatched, unmarkMovieWatched, isEpisodeWatched, unmarkEpisodeWatched } = window.utils;
 
   const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -228,11 +216,68 @@ function initSidebar() {
     });
   }
 
+  const loadSidebarData = (url, container, linkGenerator, type) => {
+    return originalLoadSidebarData(url, container, (index, item) => {
+      const linkPath = linkGenerator(index, item);
+      return {
+        href: linkPath,
+        attributes: {
+          'role': 'menuitem',
+          'data-title': item.title || `Item ${index + 1}`
+        }
+      };
+    }).then(() => {
+      Array.from(container.querySelectorAll('a[role="menuitem"]')).forEach((link, idx) => {
+        let indicator = link.parentNode.querySelector('.watched-indicator-sidebar');
+        if (indicator) indicator.remove();
+
+        let watched = false;
+        if (type === 'movie') {
+          watched = isMovieWatched(idx);
+        } else if (type === 'episode') {
+        }
+        if (watched) {
+          indicator = document.createElement('span');
+          indicator.className = 'watched-indicator-sidebar';
+          indicator.style.marginLeft = '8px';
+          indicator.style.cursor = 'pointer';
+          indicator.tabIndex = 0;
+          indicator.setAttribute('role', 'button');
+          indicator.setAttribute('aria-label', 'Remove watched status');
+          indicator.textContent = '✔️';
+
+          indicator.addEventListener('mouseenter', () => {
+            indicator.textContent = '❌';
+          });
+          indicator.addEventListener('mouseleave', () => {
+            indicator.textContent = '✔️';
+          });
+          indicator.addEventListener('click', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            if (type === 'movie') {
+              unmarkMovieWatched(idx);
+              indicator.remove();
+            }
+          });
+          indicator.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              indicator.click();
+            }
+          });
+
+          link.parentNode.insertBefore(indicator, link.nextSibling);
+        }
+      });
+    });
+  };
+
   if (movieLinks) {
     loadSidebarData(
       './data/movie_data.json', 
       movieLinks, 
-      (i) => `./movie.html?movie=${i}`
+      (i) => `./movie.html?movie=${i}`,
+      'movie'
     );
   }
 
@@ -240,7 +285,8 @@ function initSidebar() {
     loadSidebarData(
       './data/episodes_data.json', 
       seasonLinks, 
-      (i) => `./episodes.html?season=${i}`
+      (i) => `./episodes.html?season=${i}`,
+      'episode'
     );
   }
 

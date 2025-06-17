@@ -36,6 +36,11 @@
       white-space: pre-wrap;
       text-align: center;
     }
+    .watched-indicator {
+      margin-top: 8px;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -88,7 +93,7 @@
 
       window.utils.initTheme();
 
-      const { renderMediaPage, updateElement, getElement } = window.utils;
+      const { renderMediaPage, updateElement, getElement, markMovieWatched, isMovieWatched, unmarkMovieWatched } = window.utils;
 
       const containers = {
         errorContainer: '.content-text pre',
@@ -98,6 +103,9 @@
         description: '.content-text pre'
       };
 
+      const params = new URLSearchParams(window.location.search);
+      const movieIdx = parseInt(params.get('movie'), 10);
+
       const movie = await renderMediaPage({
         mediaType: 'movie',
         dataUrl: './data/movie_data.json',
@@ -105,7 +113,44 @@
         containers
       });
 
-      if (!movie) return;
+      if (!movie || isNaN(movieIdx)) return;
+
+      markMovieWatched(movieIdx);
+
+      updateElement('.header-text', el => {
+        let indicator = el.parentNode.querySelector('.watched-indicator');
+        if (indicator) indicator.remove();
+
+        if (isMovieWatched(movieIdx)) {
+          indicator = document.createElement('div');
+          indicator.className = 'watched-indicator';
+          indicator.style.marginTop = '8px';
+          indicator.style.fontSize = '1.2rem';
+          indicator.style.cursor = 'pointer';
+          indicator.tabIndex = 0;
+          indicator.setAttribute('role', 'button');
+          indicator.setAttribute('aria-label', 'Remove watched status');
+          indicator.textContent = '✔️ Watched';
+
+          indicator.addEventListener('mouseenter', () => {
+            indicator.textContent = '❌ Remove Watched Status';
+          });
+          indicator.addEventListener('mouseleave', () => {
+            indicator.textContent = '✔️ Watched';
+          });
+          indicator.addEventListener('click', () => {
+            unmarkMovieWatched(movieIdx);
+            indicator.remove();
+          });
+          indicator.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              indicator.click();
+            }
+          });
+
+          el.parentNode.insertBefore(indicator, el.nextSibling);
+        }
+      });
 
       updateElement('.embed-section iframe', el => {
         if (movie.embed_link) {

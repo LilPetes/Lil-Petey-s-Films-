@@ -91,10 +91,57 @@
         getElementById: getElement, 
         fetchData: utilsFetchData,
         sanitizeHTML,
-        handleError 
+        handleError,
+        isMovieWatched,
+        markMovieWatched,
+        unmarkMovieWatched,
+        isEpisodeWatched,
+        markEpisodeWatched,
+        unmarkEpisodeWatched
       } = window.utils;
 
-      const createCard = (item, index, page, paramName) => {
+      const createWatchedIndicator = (type, idx, extra, sidebar) => {
+        const watched = type === 'movie'
+          ? isMovieWatched(idx)
+          : isEpisodeWatched(idx, extra);
+        if (!watched) return null;
+
+        const span = document.createElement('span');
+        span.className = sidebar ? 'watched-indicator-sidebar' : 'watched-indicator';
+        span.style.cursor = 'pointer';
+        span.tabIndex = 0;
+        span.setAttribute('role', 'button');
+        span.setAttribute('aria-label', sidebar ? 'Remove' : 'Remove');
+        span.textContent = sidebar ? '✔️' : '✔️ Watched';
+
+        span.addEventListener('mouseenter', () => {
+          span.textContent = sidebar ? '❌' : '❌ Remove';
+        });
+        span.addEventListener('mouseleave', () => {
+          span.textContent = sidebar ? '✔️' : '✔️ Watched';
+        });
+        span.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (type === 'movie') {
+            unmarkMovieWatched(idx);
+          } else {
+            unmarkEpisodeWatched(idx, extra);
+          }
+          if (type === 'movie') {
+            renderGallery(sortItems(moviesData, movieSort ? movieSort.value : 'default'), 'movie-gallery', 'movie.html', 'movie');
+          } else {
+            renderGallery(sortItems(episodesData, episodesSort ? episodesSort.value : 'default'), 'episodes-gallery', 'episodes.html', 'season');
+          }
+        });
+        span.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            span.click();
+          }
+        });
+        return span;
+      };
+
+      const createCard = (item, index, page, paramName, containerId) => {
         const card = document.createElement('article');
         card.className = 'movie-card';
 
@@ -107,12 +154,18 @@
           card.setAttribute('aria-label', `View ${item.title || 'item'} details`);
 
           card.onclick = () => {
+            if (page === 'movie.html') {
+              markMovieWatched(index);
+            }
             window.location.href = `./${page}?${paramName}=${index}`;
           };
 
           card.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
+              if (page === 'movie.html') {
+                markMovieWatched(index);
+              }
               window.location.href = `./${page}?${paramName}=${index}`;
             }
           });
@@ -219,8 +272,22 @@
         title.className = 'title';
         title.textContent = item.title || 'Untitled';
 
+        const titleContainer = document.createElement('div');
+        titleContainer.className = 'title-container';
+        titleContainer.appendChild(title);
+
+        if (page === 'movie.html') {
+          const watched = createWatchedIndicator('movie', index, null, false);
+          if (watched) {
+            titleContainer.appendChild(watched);
+          }
+        }
+
         card.appendChild(img);
-        card.appendChild(title);
+        card.appendChild(titleContainer);
+
+        if (containerId === 'episodes-gallery' && Array.isArray(item.embed_links)) {
+        }
 
         return card;
       };
@@ -239,7 +306,7 @@
         const fragment = document.createDocumentFragment();
 
         items.forEach((item, index) => {
-          const card = createCard(item, index, page, paramName);
+          const card = createCard(item, index, page, paramName, containerId);
 
           if (containerId === 'coming-soon-gallery' && item.description) {
             const description = document.createElement('div');

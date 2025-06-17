@@ -79,7 +79,8 @@
 
       window.utils.initTheme();
 
-      const { renderMediaPage, createVideo, getElement, handleError, sanitizeHTML } = window.utils;
+      const { renderMediaPage, createVideo, getElement, handleError, sanitizeHTML,
+        markEpisodeWatched, isEpisodeWatched, unmarkEpisodeWatched } = window.utils;
 
       const containers = {
         errorContainer: '.content-text pre',
@@ -89,6 +90,9 @@
         description: '.content-text pre'
       };
 
+      const params = new URLSearchParams(window.location.search);
+      const seasonIdx = parseInt(params.get('season'), 10);
+
       const season = await renderMediaPage({
         mediaType: 'season',
         dataUrl: './data/episodes_data.json',
@@ -96,7 +100,7 @@
         containers
       });
 
-      if (!season) return;
+      if (!season || isNaN(seasonIdx)) return;
 
       const episodesList = getElement('#episodes-list');
       if (!episodesList) return;
@@ -126,8 +130,37 @@
         titleElement.id = `episode-title-${index}`;
         titleElement.textContent = episode.title || `Episode ${index + 1}`;
 
-        const descriptionElement = document.createElement('p');
+        if (isEpisodeWatched(seasonIdx, index)) {
+          const watchedDiv = document.createElement('div');
+          watchedDiv.className = 'watched-indicator';
+          watchedDiv.style.margin = '4px 0 8px 0';
+          watchedDiv.style.fontSize = '1.1rem';
+          watchedDiv.style.cursor = 'pointer';
+          watchedDiv.tabIndex = 0;
+          watchedDiv.setAttribute('role', 'button');
+          watchedDiv.setAttribute('aria-label', 'Remove watched status');
+          watchedDiv.textContent = '✔️ Watched';
 
+          watchedDiv.addEventListener('mouseenter', () => {
+            watchedDiv.textContent = '❌ Remove Watched Status';
+          });
+          watchedDiv.addEventListener('mouseleave', () => {
+            watchedDiv.textContent = '✔️ Watched';
+          });
+          watchedDiv.addEventListener('click', () => {
+            unmarkEpisodeWatched(seasonIdx, index);
+            watchedDiv.remove();
+          });
+          watchedDiv.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              watchedDiv.click();
+            }
+          });
+
+          episodeElement.appendChild(watchedDiv);
+        }
+
+        const descriptionElement = document.createElement('p');
         const safeDescription = sanitizeHTML(episode.description || 'No description available');
         descriptionElement.textContent = safeDescription;
 
@@ -145,6 +178,41 @@
           if (videoChild) {
             videoChild.setAttribute('aria-label', `${episode.title || `Episode ${index + 1}`} video player`);
             videoChild.setAttribute('data-episode', index + 1);
+
+            videoChild.addEventListener('play', () => {
+              if (!isEpisodeWatched(seasonIdx, index)) {
+                markEpisodeWatched(seasonIdx, index);
+                if (!episodeElement.querySelector('.watched-indicator')) {
+                  const watchedDiv = document.createElement('div');
+                  watchedDiv.className = 'watched-indicator';
+                  watchedDiv.style.margin = '4px 0 8px 0';
+                  watchedDiv.style.fontSize = '1.1rem';
+                  watchedDiv.style.cursor = 'pointer';
+                  watchedDiv.tabIndex = 0;
+                  watchedDiv.setAttribute('role', 'button');
+                  watchedDiv.setAttribute('aria-label', 'Remove watched status');
+                  watchedDiv.textContent = '✔️ Watched';
+
+                  watchedDiv.addEventListener('mouseenter', () => {
+                    watchedDiv.textContent = '❌ Remove Watched Status';
+                  });
+                  watchedDiv.addEventListener('mouseleave', () => {
+                    watchedDiv.textContent = '✔️ Watched';
+                  });
+                  watchedDiv.addEventListener('click', () => {
+                    unmarkEpisodeWatched(seasonIdx, index);
+                    watchedDiv.remove();
+                  });
+                  watchedDiv.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      watchedDiv.click();
+                    }
+                  });
+
+                  episodeElement.insertBefore(watchedDiv, descriptionElement);
+                }
+              }
+            });
           }
 
           episodeElement.appendChild(videoElement);

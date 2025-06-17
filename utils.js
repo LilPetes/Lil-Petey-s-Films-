@@ -480,6 +480,74 @@ const createPreviewVideo = (src, title, muted = true) => {
   return video;
 };
 
+const WATCHED_MOVIES_KEY = 'watchedMovies';
+const WATCHED_EPISODES_KEY = 'watchedEpisodes';
+
+function getWatchedMovies() {
+  try {
+    return JSON.parse(localStorage.getItem(WATCHED_MOVIES_KEY)) || [];
+  } catch {
+    return [];
+  }
+}
+
+function setWatchedMovies(arr) {
+  localStorage.setItem(WATCHED_MOVIES_KEY, JSON.stringify(arr));
+}
+
+function markMovieWatched(index) {
+  const arr = getWatchedMovies();
+  if (!arr.includes(index)) {
+    arr.push(index);
+    setWatchedMovies(arr);
+  }
+}
+
+function unmarkMovieWatched(index) {
+  let arr = getWatchedMovies();
+  arr = arr.filter(i => i !== index);
+  setWatchedMovies(arr);
+}
+
+function isMovieWatched(index) {
+  return getWatchedMovies().includes(index);
+}
+
+function getWatchedEpisodes() {
+  try {
+    return JSON.parse(localStorage.getItem(WATCHED_EPISODES_KEY)) || {};
+  } catch {
+    return {};
+  }
+}
+
+function setWatchedEpisodes(obj) {
+  localStorage.setItem(WATCHED_EPISODES_KEY, JSON.stringify(obj));
+}
+
+function markEpisodeWatched(seasonIdx, episodeIdx) {
+  const obj = getWatchedEpisodes();
+  if (!obj[seasonIdx]) obj[seasonIdx] = [];
+  if (!obj[seasonIdx].includes(episodeIdx)) {
+    obj[seasonIdx].push(episodeIdx);
+    setWatchedEpisodes(obj);
+  }
+}
+
+function unmarkEpisodeWatched(seasonIdx, episodeIdx) {
+  const obj = getWatchedEpisodes();
+  if (obj[seasonIdx]) {
+    obj[seasonIdx] = obj[seasonIdx].filter(i => i !== episodeIdx);
+    if (obj[seasonIdx].length === 0) delete obj[seasonIdx];
+    setWatchedEpisodes(obj);
+  }
+}
+
+function isEpisodeWatched(seasonIdx, episodeIdx) {
+  const obj = getWatchedEpisodes();
+  return Array.isArray(obj[seasonIdx]) && obj[seasonIdx].includes(episodeIdx);
+}
+
 window.utils = {
   getElement,
   getElementById,
@@ -496,5 +564,13 @@ window.utils = {
   renderMediaPage,
   loadSidebarData,
   initTheme,
-  toggleTheme
+  toggleTheme,
+  getWatchedMovies,
+  markMovieWatched,
+  unmarkMovieWatched,
+  isMovieWatched,
+  getWatchedEpisodes,
+  markEpisodeWatched,
+  unmarkEpisodeWatched,
+  isEpisodeWatched,
 };
