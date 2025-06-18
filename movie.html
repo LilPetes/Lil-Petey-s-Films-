@@ -71,9 +71,10 @@
   </main>
 
   <div id="sidebar-container"></div>
-  <script src="./utils.js"></script>
-  <script src="./sidebar.js"></script>
-  <script>
+  <script type="module">
+    import { initSidebar } from './sidebar.js';
+    import { fetchData, handleError, markMovieWatched, isMovieWatched, unmarkMovieWatched } from './utils.js';
+
     fetch('./sidebar.html')
       .then(res => res.text())
       .then(html => {
@@ -82,45 +83,49 @@
       .then(() => {
         initSidebar();
       });
-  </script>  
 
-  <script>
     document.addEventListener('DOMContentLoaded', async () => {
-      if (!window.utils) {
-        console.error('utils.js is not loaded properly');
-        return;
-      }
-
-      window.utils.initTheme();
-
-      const { renderMediaPage, updateElement, getElement, markMovieWatched, isMovieWatched, unmarkMovieWatched } = window.utils;
-
       const containers = {
-        errorContainer: '.content-text pre',
-        headerBg: '.header-background',
-        headerText: '.header-text',
-        thumbnail: '.content-section img',
+        error: '.content-text pre',
+        title: '.header-text',
+        content: '.content-section img',
         description: '.content-text pre'
       };
-
       const params = new URLSearchParams(window.location.search);
       const movieIdx = parseInt(params.get('movie'), 10);
-
-      const movie = await renderMediaPage({
-        mediaType: 'movie',
-        dataUrl: './data/movie_data.json',
-        paramName: 'movie',
-        containers
-      });
-
-      if (!movie || isNaN(movieIdx)) return;
-
+      let movieData = null;
+      try {
+        const data = await fetchData('./data/movie_data.json');
+        if (!Array.isArray(data) || isNaN(movieIdx) || movieIdx < 0 || movieIdx >= data.length) {
+          throw new Error('Invalid movie index');
+        }
+        movieData = data[movieIdx];
+        const titleEl = document.querySelector(containers.title);
+        const imgEl = document.querySelector(containers.content);
+        const descEl = document.querySelector(containers.description);
+        if (titleEl) titleEl.textContent = movieData.title || `Movie ${movieIdx + 1}`;
+        if (imgEl) {
+          imgEl.src = movieData.thumbnail || '';
+          imgEl.alt = movieData.title || `Movie ${movieIdx + 1} thumbnail`;
+          imgEl.onerror = () => {
+            imgEl.src = 'placeholder.jpg';
+            imgEl.alt = 'Image could not be loaded';
+          };
+        }
+        const headerBg = document.querySelector('.header-background');
+        if (headerBg) {
+          headerBg.style.backgroundImage = `url('${movieData.thumbnail || 'placeholder.jpg'}')`;
+        }
+        if (descEl) descEl.textContent = movieData.description || '';
+      } catch (error) {
+        handleError(error, document.querySelector(containers.error));
+        return;
+      }
       markMovieWatched(movieIdx);
-
-      updateElement('.header-text', el => {
-        let indicator = el.parentNode.querySelector('.watched-indicator');
+      const headerText = document.querySelector('.header-text');
+      if (headerText) {
+        let indicator = headerText.parentNode.querySelector('.watched-indicator');
         if (indicator) indicator.remove();
-
         if (isMovieWatched(movieIdx)) {
           indicator = document.createElement('div');
           indicator.className = 'watched-indicator';
@@ -131,7 +136,6 @@
           indicator.setAttribute('role', 'button');
           indicator.setAttribute('aria-label', 'Remove watched status');
           indicator.textContent = '✔️ Watched';
-
           indicator.addEventListener('mouseenter', () => {
             indicator.textContent = '❌ Remove Watched Status';
           });
@@ -147,22 +151,20 @@
               indicator.click();
             }
           });
-
-          el.parentNode.insertBefore(indicator, el.nextSibling);
+          headerText.parentNode.insertBefore(indicator, headerText.nextSibling);
         }
-      });
-
-      updateElement('.embed-section iframe', el => {
-        if (movie.embed_link) {
-          el.src = movie.embed_link;
-          el.title = `${movie.title || 'Movie'} content`;
-
-          el.setAttribute('aria-label', `${movie.title || 'Movie'} player`);
-          el.setAttribute('loading', 'lazy');
-          el.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation');
-          el.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+      }
+      const embedFrame = document.querySelector('.embed-section iframe');
+      if (embedFrame) {
+        if (movieData.embed_link) {
+          embedFrame.src = movieData.embed_link;
+          embedFrame.title = `${movieData.title || 'Movie'} content`;
+          embedFrame.setAttribute('aria-label', `${movieData.title || 'Movie'} player`);
+          embedFrame.setAttribute('loading', 'lazy');
+          embedFrame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation');
+          embedFrame.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
         } else {
-          const parent = el.parentElement;
+          const parent = embedFrame.parentElement;
           if (parent) {
             parent.innerHTML = `
               <div class="error-message" role="alert">
@@ -171,30 +173,8 @@
             `;
           }
         }
-      });
-
-      const trailerSection = getElement('.trailer-section');
-      if (trailerSection && movie.video_url) {
-        try {
-          const youtubeID = new URL(movie.video_url).searchParams.get('v');
-          if (youtubeID) {
-            trailerSection.style.display = 'block';
-            updateElement('.trailer-video iframe', el => {
-              el.src = `https://www.youtube.com/embed/${youtubeID}`;
-              el.title = `${movie.title} trailer`;
-              el.setAttribute('loading', 'lazy');
-              el.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
-            });
-          }
-        } catch (e) {
-          console.warn('Invalid trailer URL:', e);
-          trailerSection.style.display = 'none';
-        }
-      } else if (trailerSection) {
-        trailerSection.style.display = 'none';
       }
     });
-  </script>  
-
+  </script>
 </body>
 </html>

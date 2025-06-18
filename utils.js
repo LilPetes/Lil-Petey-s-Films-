@@ -1,463 +1,271 @@
-const getElement = (selector) => {
-  const element = typeof selector === 'string' ? 
-    document.querySelector(selector) : 
-    selector;
+const CACHE_EXPIRY = 5 * 60 * 1000;
+const WATCHED_MOVIES_KEY = 'watchedMovies';
+const WATCHED_EPISODES_KEY = 'watchedEpisodes';
 
-  if (!element) console.warn(`Element with selector '${selector}' not found`);
+const cache = new Map();
+const cleanupInterval = setInterval(() => {
+  const now = Date.now();
+  for (const [key, value] of cache.entries()) {
+    if (now - value.timestamp > CACHE_EXPIRY) {
+      cache.delete(key);
+    }
+  }
+}, CACHE_EXPIRY);
+
+export function getElement(selector) {
+  const element = document.querySelector(selector);
+  if (!element) {
+    console.warn(`Element not found: ${selector}`);
+  }
   return element;
-};
+}
 
-const getElementById = (id) => {
+export function getElementById(id) {
   const element = document.getElementById(id);
-  if (!element) console.warn(`Element with id '${id}' not found`);
+  if (!element) {
+    console.warn(`Element not found with id: ${id}`);
+  }
   return element;
-};
+}
 
-const updateElement = (selector, updateFn) => {
-  const element = getElement(selector);
-  if (element) updateFn(element);
-};
+export function updateElement(element, content) {
+  if (!element) return;
+  element.innerHTML = content;
+}
 
-const debounce = (func, delay) => {
+export function debounce(func, delay) {
   let timeout;
   return function(...args) {
     clearTimeout(timeout);
     timeout = setTimeout(() => func.apply(this, args), delay);
   };
-};
+}
 
-const dataCache = {};
+export async function fetchData(url, options = {}) {
+  const cacheKey = `${url}-${JSON.stringify(options)}`;
+  const cached = cache.get(cacheKey);
+  
+  if (cached && Date.now() - cached.timestamp < CACHE_EXPIRY) {
+    return cached.data;
+  }
 
-const CACHE_EXPIRY = 5 * 60 * 1000;
-
-const fetchData = async (url, options = {}) => {
-  const { useCache = true, cacheTime = CACHE_EXPIRY } = options;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
 
   try {
-    if (useCache && dataCache[url] && Date.now() - dataCache[url].timestamp < cacheTime) {
-      return dataCache[url].data;
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const response = await fetch(url, options.fetchOptions || {});
-    if (!response.ok) throw new Error(`HTTP error ${response.status}`);
-
-    const data = await response.json();
-
-    if (useCache) {
-      dataCache[url] = {
-        data,
-        timestamp: Date.now()
-      };
+    let data;
+    try {
+      data = await response.json();
+    } catch (e) {
+      throw new Error('Invalid JSON response from server');
     }
 
+    if (!Array.isArray(data)) {
+      throw new Error('Expected array data from server');
+    }
+
+    cache.set(cacheKey, { data, timestamp: Date.now() });
     return data;
   } catch (error) {
-    console.error(`Error fetching ${url}:`, error);
+    if (error.name === 'AbortError') {
+      throw new Error('Request timed out');
+    }
     throw error;
   }
-};
+}
 
-const showError = (selector, message) => {
-  const element = getElement(selector);
+export function handleError(error, element) {
+  console.error('Error:', error);
   if (element) {
-    element.textContent = message || 'An error occurred. Please try again.';
-    element.style.color = 'red';
-    element.setAttribute('role', 'alert');
-    element.setAttribute('aria-live', 'assertive');
+    element.innerHTML = `
+      <div class="error-message">
+        <p>An error occurred: ${error.message}</p>
+        <p>Please try again later.</p>
+      </div>
+    `;
   }
-};
+}
 
-const handleError = (error, errorContainer, fallbackContent = null) => {
-  console.error(error);
+export function showError(message, element) {
+  if (!element) return;
+  element.innerHTML = `
+    <div class="error-message">
+      <p>${message}</p>
+    </div>
+  `;
+}
 
-  if (typeof errorContainer === 'string') {
-    errorContainer = getElement(errorContainer);
-  }
+export function sanitizeHTML(str) {
+  const temp = document.createElement('div');
+  temp.textContent = str;
+  return temp.innerHTML;
+}
 
-  if (errorContainer) {
-    errorContainer.innerHTML = '';
-
-    const errorMessage = document.createElement('div');
-    errorMessage.textContent = typeof error === 'string' ? error : error.message || 'An unexpected error occurred';
-    errorMessage.className = 'error-message';
-    errorMessage.setAttribute('role', 'alert');
-    errorMessage.setAttribute('aria-live', 'assertive');
-
-    errorContainer.appendChild(errorMessage);
-
-    if (fallbackContent) {
-      const fallbackElement = document.createElement('div');
-      fallbackElement.className = 'fallback-content';
-      fallbackElement.innerHTML = fallbackContent;
-      errorContainer.appendChild(fallbackElement);
-    }
-  }
-};
-
-const sanitizeHTML = (html) => {
-  return html.replace(/[<>&"']/g, (match) => {
-    return {
-      '<': '&lt;',
-      '>': '&gt;',
-      '&': '&amp;',
-      '"': '&quot;',
-      "'": '&#39;'
-    }[match];
-  });
-};
-
-const createImage = (src, alt, className) => {
+export function createImageElement(src, alt, className = '') {
   const img = document.createElement('img');
-  img.src = src || '';
-  img.alt = alt || '';
+  img.src = src;
+  img.alt = alt;
   if (className) img.className = className;
-  img.loading = 'lazy';
-
-  img.setAttribute('decoding', 'async');
-  if (!alt) {
-    img.setAttribute('role', 'presentation');
-  }
-
   img.onerror = () => {
-    img.src = 'placeholder.jpg';
-    img.alt = 'Image could not be loaded';
-    img.onerror = null;
+    img.src = './assets/placeholder.jpg';
+    img.alt = 'Image not available';
   };
-
   return img;
-};
+}
 
-const createIframe = (src, title, aspectRatio = '56.25%') => {
-  const wrapper = document.createElement('div');
-  wrapper.style.position = 'relative';
-  wrapper.style.paddingBottom = aspectRatio;
-  wrapper.style.height = '0';
-  wrapper.style.overflow = 'hidden';
-  wrapper.className = 'iframe-wrapper';
-
-  const iframe = document.createElement('iframe');
-  iframe.src = src;
-  iframe.title = title || 'Embedded content';
-  iframe.style.position = 'absolute';
-  iframe.style.top = '0';
-  iframe.style.left = '0';
-  iframe.style.width = '100%';
-  iframe.style.height = '100%';
-  iframe.style.border = 'none';
-  iframe.loading = 'lazy';
-  iframe.allowFullscreen = true;
-
-  iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation');
-  iframe.setAttribute('referrerpolicy', 'no-referrer-when-downgrade');
-  iframe.setAttribute('aria-labelledby', `iframe-title-${Math.random().toString(36).substring(2, 9)}`);
-
-  const titleElement = document.createElement('p');
-  titleElement.id = iframe.getAttribute('aria-labelledby');
-  titleElement.className = 'sr-only';
-  titleElement.textContent = iframe.title;
-
-  wrapper.appendChild(titleElement);
-  wrapper.appendChild(iframe);
-  return wrapper;
-};
-
-const createVideo = (src, title, poster, aspectRatio = '56.25%') => {
-  const wrapper = document.createElement('div');
-  wrapper.className = 'video-wrapper';
-  wrapper.style.position = 'relative';
-  wrapper.style.paddingBottom = aspectRatio;
-  wrapper.style.height = '0';
-  wrapper.style.overflow = 'hidden';
-
+export function createVideoElement(src, className = '') {
   const video = document.createElement('video');
+  video.src = src;
+  video.className = className;
   video.controls = true;
-  video.style.position = 'absolute';
-  video.style.top = '0';
-  video.style.left = '0';
-  video.style.width = '100%';
-  video.style.height = '100%';
-  video.style.objectFit = 'cover';
-  video.title = title || 'Video content';
-  video.loading = 'lazy';
-  video.poster = poster || 'placeholder.jpg';
+  video.onerror = () => {
+    video.parentElement.innerHTML = `
+      <div class="video-error">
+        <p>Failed to load video. Please try again later.</p>
+      </div>
+    `;
+  };
+  return video;
+}
 
-  video.setAttribute('preload', 'metadata');
-  video.setAttribute('playsinline', '');
-  video.setAttribute('aria-label', title || 'Video content');
+export function initTheme() {
+  const theme = localStorage.getItem('theme') || 'dark';
+  document.documentElement.className = theme + '-mode';
+  updateThemeButton(theme);
+}
 
-  video.setAttribute('controlsList', 'nodownload');
-
-  video.addEventListener('error', () => {
-    const errorMessage = document.createElement('div');
-    errorMessage.className = 'video-error';
-    errorMessage.textContent = 'Video could not be loaded';
-    errorMessage.setAttribute('role', 'alert');
-    wrapper.appendChild(errorMessage);
-  });
-
-  if (src) {
-    const source = document.createElement('source');
-    source.src = src;
-    source.type = 'video/mp4';
-    video.appendChild(source);
+export function toggleTheme() {
+  const currentTheme = document.documentElement.className.replace('-mode', '');
+  let newTheme;
+  
+  switch (currentTheme) {
+    case 'light':
+      newTheme = 'dark';
+      break;
+    case 'dark':
+      newTheme = 'oled';
+      break;
+    case 'oled':
+      newTheme = 'light';
+      break;
+    default:
+      newTheme = 'dark';
   }
+  
+  document.documentElement.className = newTheme + '-mode';
+  localStorage.setItem('theme', newTheme);
+  updateThemeButton(newTheme);
+}
 
-  wrapper.appendChild(video);
-  return wrapper;
-};
+window.toggleTheme = toggleTheme;
 
-const renderMediaPage = async (config) => {
-  const {
-    mediaType,
-    dataUrl,
-    paramName,
-    containers = {}
-  } = config;
+function updateThemeButton(theme) {
+  const themeToggle = document.getElementById('theme-toggle');
+  if (!themeToggle) return;
+  
+  switch (theme) {
+    case 'light':
+      themeToggle.textContent = '☀️';
+      themeToggle.setAttribute('aria-label', 'Switch to dark mode');
+      break;
+    case 'dark':
+      themeToggle.textContent = '🔅';
+      themeToggle.setAttribute('aria-label', 'Switch to OLED mode');
+      break;
+    case 'oled':
+      themeToggle.textContent = '🌙';
+      themeToggle.setAttribute('aria-label', 'Switch to light mode');
+      break;
+  }
+}
 
+export function isMovieWatched(index) {
+  const watched = JSON.parse(localStorage.getItem(WATCHED_MOVIES_KEY) || '[]');
+  return watched.includes(index);
+}
+
+export function markMovieWatched(index) {
+  const watched = JSON.parse(localStorage.getItem(WATCHED_MOVIES_KEY) || '[]');
+  if (!watched.includes(index)) {
+    watched.push(index);
+    localStorage.setItem(WATCHED_MOVIES_KEY, JSON.stringify(watched));
+  }
+}
+
+export function unmarkMovieWatched(index) {
+  const watched = JSON.parse(localStorage.getItem(WATCHED_MOVIES_KEY) || '[]');
+  const newWatched = watched.filter(i => i !== index);
+  localStorage.setItem(WATCHED_MOVIES_KEY, JSON.stringify(newWatched));
+}
+
+export function getWatchedEpisodes() {
   try {
-    const params = new URLSearchParams(window.location.search);
-    const mediaIndex = parseInt(params.get(paramName), 10);
-
-    if (isNaN(mediaIndex)) {
-      const errorMessage = `Invalid ${mediaType} ID. Please <a href="./index.html">return to the home page</a>.`;
-      if (containers.errorContainer) {
-        const errorElement = getElement(containers.errorContainer);
-        if (errorElement) {
-          errorElement.innerHTML = errorMessage;
-          errorElement.classList.add('error-message');
-          errorElement.setAttribute('role', 'alert');
-          errorElement.style.whiteSpace = 'pre-wrap';
-          errorElement.style.textAlign = 'center';
+    return JSON.parse(localStorage.getItem(WATCHED_EPISODES_KEY)) || {};
+  } catch {
+    return {};
         }
-      }
-      return null;
-    }
+}
 
-    const data = await fetchData(dataUrl);
-    if (!Array.isArray(data)) {
-      throw new Error('Invalid data format');
-    }
-
-    const mediaItem = data[mediaIndex];
-    if (!mediaItem) {
-      throw new Error(`${mediaType} with ID ${mediaIndex} not found`);
-    }
-
-    document.title = mediaItem.title || mediaType;
-    let metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc) {
-      metaDesc.setAttribute('content', `Watch ${mediaItem.title} - ${mediaItem.description?.substring(0, 100) || ''}...`);
-    }
-
-    if (containers.headerBg) {
-      updateElement(containers.headerBg, el => {
-        el.style.backgroundImage = `url('${mediaItem.thumbnail || ''}')`;        
-      });
-    }
-
-    if (containers.headerText) {
-      updateElement(containers.headerText, el => {
-        el.textContent = mediaItem.title || `Untitled ${mediaType}`;
-      });
-    }
-
-    if (containers.thumbnail) {
-      updateElement(containers.thumbnail, el => {
-        el.src = mediaItem.thumbnail || '';
-        el.alt = `${mediaItem.title || mediaType} thumbnail`;
-        el.loading = 'lazy';
-        el.setAttribute('aria-hidden', 'false');
-        el.onerror = () => {
-          el.src = 'placeholder.jpg';
-          el.onerror = null;
-        };
-      });
-    }
-
-    if (containers.description) {
-      updateElement(containers.description, el => {
-        el.textContent = mediaItem.description || 'No description available';
-      });
-    }
-
-    return mediaItem;
-  } catch (error) {
-    handleError(error, containers.errorContainer);
-    return null;
-  }
-};
-
-const loadSidebarData = (url, container, linkTemplate) => {
-  if (!container) return Promise.reject(new Error(`Container not found`));
-
-  container.innerHTML = '<p style="opacity: 0.6;" aria-live="polite">Loading...</p>';
-
-  return fetchData(url)
-    .then(data => {
-      if (!Array.isArray(data) || data.length === 0) {
-        container.innerHTML = '<p style="opacity: 0.6;" role="status">No items available</p>';
-        return;
+export function setWatchedEpisodes(obj) {
+  localStorage.setItem(WATCHED_EPISODES_KEY, JSON.stringify(obj));
       }
 
-      container.innerHTML = '';
-      const fragment = document.createDocumentFragment();
-
-      data.forEach((item, i) => {
-        const link = document.createElement('a');
-        const linkConfig = linkTemplate(i, item);
-
-        if (typeof linkConfig === 'string') {
-          link.href = linkConfig;
-        } else if (linkConfig && typeof linkConfig === 'object') {
-          link.href = linkConfig.href || '#';
-
-          if (linkConfig.attributes) {
-            Object.entries(linkConfig.attributes).forEach(([attr, value]) => {
-              link.setAttribute(attr, value);
-            });
-          }
-        }
-
-        link.textContent = item.title || `Item ${i+1}`;
-        if (!link.hasAttribute('data-title')) {
-          link.setAttribute('data-title', item.title || '');
-        }
-        if (!link.hasAttribute('role')) {
-          link.setAttribute('role', 'menuitem');
-        }
-
-        fragment.appendChild(link);
-      });
-
-      container.appendChild(fragment);
-
-      if (container.querySelectorAll('a[style="display: none;"]').length === container.querySelectorAll('a').length) {
-        const noResults = document.createElement('p');
-        noResults.textContent = 'No matching results';
-        noResults.className = 'no-results';
-        noResults.setAttribute('role', 'status');
-        container.appendChild(noResults);
-      }
-    })
-    .catch(err => {
-      console.error(`Failed to load data from ${url}:`, err);
-      container.innerHTML = `<p style="color: red;" role="alert">Failed to load data.</p>`;
-    });
-};
-
-const initTheme = () => {
-  const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
-
-  const savedTheme = localStorage.getItem('theme');
-
-  document.body.classList.remove('light-mode', 'oled-mode');
-
-  if (savedTheme === 'light') {
-    document.body.classList.add('light-mode');
-  } else if (savedTheme === 'oled') {
-    document.body.classList.add('oled-mode');
-  } else if (!savedTheme && !prefersDarkScheme.matches) {
-    document.body.classList.add('light-mode');
+export function isEpisodeWatched(seasonIndex, episodeIndex) {
+  const watched = JSON.parse(localStorage.getItem(WATCHED_EPISODES_KEY) || '{}');
+  return watched[seasonIndex]?.includes(episodeIndex) || false;
   }
 
-  const themeToggle = document.getElementById('theme-toggle');
-  if (themeToggle) {
-    const currentTheme = savedTheme || (prefersDarkScheme.matches ? 'dark' : 'light');
-    updateThemeToggleButton(themeToggle, currentTheme);
+export function markEpisodeWatched(seasonIndex, episodeIndex) {
+  const watched = JSON.parse(localStorage.getItem(WATCHED_EPISODES_KEY) || '{}');
+  if (!watched[seasonIndex]) {
+    watched[seasonIndex] = [];
   }
-
-  if (!savedTheme) {
-    prefersDarkScheme.addEventListener('change', (e) => {
-      if (!localStorage.getItem('theme')) {
-        document.body.classList.toggle('light-mode', !e.matches);
-
-        if (themeToggle) {
-          updateThemeToggleButton(themeToggle, e.matches ? 'dark' : 'light');
-        }
-      }
-    });
+  if (!watched[seasonIndex].includes(episodeIndex)) {
+    watched[seasonIndex].push(episodeIndex);
+    localStorage.setItem(WATCHED_EPISODES_KEY, JSON.stringify(watched));
   }
+}
 
-  return { savedTheme, prefersDarkScheme };
-};
-
-const updateThemeToggleButton = (button, theme) => {
-  if (!button) return;
-
-  let icon, label;
-
-  if (theme === 'light') {
-    icon = '☀️';
-    label = 'Switch to dark mode';
-  } else if (theme === 'dark') {
-    icon = '🔅';
-    label = 'Switch to OLED mode';
-  } else if (theme === 'oled') {
-    icon = '🌙';
-    label = 'Switch to light mode';
+export function unmarkEpisodeWatched(seasonIndex, episodeIndex) {
+  const watched = JSON.parse(localStorage.getItem(WATCHED_EPISODES_KEY) || '{}');
+  if (watched[seasonIndex]) {
+    watched[seasonIndex] = watched[seasonIndex].filter(i => i !== episodeIndex);
+    localStorage.setItem(WATCHED_EPISODES_KEY, JSON.stringify(watched));
   }
+}
 
-  button.innerHTML = icon;
-  button.setAttribute('aria-label', label);
-};
-
-const toggleTheme = () => {
-  let currentTheme = 'dark';
-
-  if (document.body.classList.contains('light-mode')) {
-    currentTheme = 'light';
-  } else if (document.body.classList.contains('oled-mode')) {
-    currentTheme = 'oled';
-  }
-
-  let nextTheme;
-  if (currentTheme === 'light') {
-    nextTheme = 'dark';
-  } else if (currentTheme === 'dark') {
-    nextTheme = 'oled';
-  } else if (currentTheme === 'oled') {
-    nextTheme = 'light';
-  }
-
-  document.body.classList.remove('light-mode', 'oled-mode');
-
-  if (nextTheme === 'light') {
-    document.body.classList.add('light-mode');
-  } else if (nextTheme === 'oled') {
-    document.body.classList.add('oled-mode');
-  }
-
-  localStorage.setItem('theme', nextTheme);
-
-  const themeToggle = document.getElementById('theme-toggle');
-  if (themeToggle) {
-    updateThemeToggleButton(themeToggle, nextTheme);
-  }
-};
-
-window.previewMuted = true;
+let previewMuted = true;
 try {
-  window.previewMuted = localStorage.getItem('previewMuted') !== 'false';
+  previewMuted = localStorage.getItem('previewMuted') !== 'false';
 } catch (e) {}
 
-window.togglePreviewMute = function() {
-  window.previewMuted = !window.previewMuted;
+export function togglePreviewMute() {
+  previewMuted = !previewMuted;
   try {
-    localStorage.setItem('previewMuted', window.previewMuted ? 'true' : 'false');
+    localStorage.setItem('previewMuted', previewMuted ? 'true' : 'false');
   } catch (e) {}
-  document.querySelectorAll('.preview-video').forEach(v => v.muted = window.previewMuted);
+  
+  document.querySelectorAll('.preview-video').forEach(v => v.muted = previewMuted);
   document.querySelectorAll('.preview-volume-btn').forEach(btn => {
-    btn.innerHTML = window.previewMuted ? '🔇' : '🔊';
-    btn.setAttribute('aria-label', window.previewMuted ? 'Unmute preview' : 'Mute preview');
+    btn.innerHTML = previewMuted ? '🔇' : '🔊';
+    btn.setAttribute('aria-label', previewMuted ? 'Unmute preview' : 'Mute preview');
   });
+  
   window.dispatchEvent(new Event('previewMuteChanged'));
-};
+}
 
-const createPreviewVideo = (src, title, muted = true) => {
+export function createPreviewVideo(src, title, muted = true) {
   if (!src) return null;
 
   const video = document.createElement('video');
-  video.muted = typeof window.previewMuted !== 'undefined' ? window.previewMuted : muted;
+  video.muted = typeof previewMuted !== 'undefined' ? previewMuted : muted;
   video.loop = true;
   video.playsInline = true;
   video.disablePictureInPicture = true;
@@ -478,99 +286,56 @@ const createPreviewVideo = (src, title, muted = true) => {
   video.appendChild(source);
 
   return video;
-};
+}
 
-const WATCHED_MOVIES_KEY = 'watchedMovies';
-const WATCHED_EPISODES_KEY = 'watchedEpisodes';
-
-function getWatchedMovies() {
+export async function loadSidebarData(url, container, linkGenerator) {
   try {
-    return JSON.parse(localStorage.getItem(WATCHED_MOVIES_KEY)) || [];
-  } catch {
-    return [];
+    const data = await fetchData(url);
+    if (!Array.isArray(data)) {
+      throw new Error('Invalid data format');
+    }
+
+    container.innerHTML = '';
+    const fragment = document.createDocumentFragment();
+
+    data.forEach((item, index) => {
+      const link = document.createElement('a');
+      link.href = linkGenerator(index);
+      link.textContent = item.title || 'Untitled';
+      link.setAttribute('data-title', item.title || 'Untitled');
+      link.setAttribute('role', 'menuitem');
+      fragment.appendChild(link);
+    });
+
+    container.appendChild(fragment);
+  } catch (error) {
+    console.error('Error loading sidebar data:', error);
+    container.innerHTML = '<p style="opacity: 0.6;">Failed to load content</p>';
   }
 }
 
-function setWatchedMovies(arr) {
-  localStorage.setItem(WATCHED_MOVIES_KEY, JSON.stringify(arr));
-}
-
-function markMovieWatched(index) {
-  const arr = getWatchedMovies();
-  if (!arr.includes(index)) {
-    arr.push(index);
-    setWatchedMovies(arr);
-  }
-}
-
-function unmarkMovieWatched(index) {
-  let arr = getWatchedMovies();
-  arr = arr.filter(i => i !== index);
-  setWatchedMovies(arr);
-}
-
-function isMovieWatched(index) {
-  return getWatchedMovies().includes(index);
-}
-
-function getWatchedEpisodes() {
-  try {
-    return JSON.parse(localStorage.getItem(WATCHED_EPISODES_KEY)) || {};
-  } catch {
-    return {};
-  }
-}
-
-function setWatchedEpisodes(obj) {
-  localStorage.setItem(WATCHED_EPISODES_KEY, JSON.stringify(obj));
-}
-
-function markEpisodeWatched(seasonIdx, episodeIdx) {
-  const obj = getWatchedEpisodes();
-  if (!obj[seasonIdx]) obj[seasonIdx] = [];
-  if (!obj[seasonIdx].includes(episodeIdx)) {
-    obj[seasonIdx].push(episodeIdx);
-    setWatchedEpisodes(obj);
-  }
-}
-
-function unmarkEpisodeWatched(seasonIdx, episodeIdx) {
-  const obj = getWatchedEpisodes();
-  if (obj[seasonIdx]) {
-    obj[seasonIdx] = obj[seasonIdx].filter(i => i !== episodeIdx);
-    if (obj[seasonIdx].length === 0) delete obj[seasonIdx];
-    setWatchedEpisodes(obj);
-  }
-}
-
-function isEpisodeWatched(seasonIdx, episodeIdx) {
-  const obj = getWatchedEpisodes();
-  return Array.isArray(obj[seasonIdx]) && obj[seasonIdx].includes(episodeIdx);
-}
-
-window.utils = {
+export default {
   getElement,
   getElementById,
   updateElement,
   debounce,
   fetchData,
-  showError,
   handleError,
-  createImage,
-  createIframe,
-  createVideo,
-  createPreviewVideo,
+  showError,
   sanitizeHTML,
-  renderMediaPage,
-  loadSidebarData,
+  createImageElement,
+  createVideoElement,
+  createPreviewVideo,
   initTheme,
   toggleTheme,
-  getWatchedMovies,
+  isMovieWatched,
   markMovieWatched,
   unmarkMovieWatched,
-  isMovieWatched,
   getWatchedEpisodes,
+  setWatchedEpisodes,
+  isEpisodeWatched,
   markEpisodeWatched,
   unmarkEpisodeWatched,
-  isEpisodeWatched,
+  togglePreviewMute,
+  loadSidebarData
 };

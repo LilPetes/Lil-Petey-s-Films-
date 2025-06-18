@@ -15,8 +15,6 @@
 
   <div id="sidebar-container"></div>
 
-  <script src="./utils.js"></script>
-
   <main>
     <header class="header-container">
       <div class="header-background" style="background-image: url('https://files.catbox.moe/my2nqu');" role="img" aria-label="Lil Petey's Films+ banner image"></div>
@@ -66,8 +64,10 @@
     </section>
   </main>
 
-  <script src="./sidebar.js"></script>
-  <script>
+  <script type="module">
+    import { initSidebar } from './sidebar.js';
+    import { fetchData, sanitizeHTML, handleError, isMovieWatched, markMovieWatched, unmarkMovieWatched, isEpisodeWatched, markEpisodeWatched, unmarkEpisodeWatched } from './utils.js';
+
     fetch('./sidebar.html')
       .then(res => res.text())
       .then(html => {
@@ -76,360 +76,219 @@
       .then(() => {
         initSidebar();
       });
-  </script>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      if (!window.utils) {
-        console.error('utils.js is not loaded properly');
-        return;
-      }
-
-      window.utils.initTheme();
-
-      const { 
-        getElementById: getElement, 
-        fetchData: utilsFetchData,
-        sanitizeHTML,
-        handleError,
-        isMovieWatched,
-        markMovieWatched,
-        unmarkMovieWatched,
-        isEpisodeWatched,
-        markEpisodeWatched,
-        unmarkEpisodeWatched
-      } = window.utils;
-
-      const createWatchedIndicator = (type, idx, extra, sidebar) => {
-        const watched = type === 'movie'
-          ? isMovieWatched(idx)
-          : isEpisodeWatched(idx, extra);
-        if (!watched) return null;
-
-        const span = document.createElement('span');
-        span.className = sidebar ? 'watched-indicator-sidebar' : 'watched-indicator';
-        span.style.cursor = 'pointer';
-        span.tabIndex = 0;
-        span.setAttribute('role', 'button');
-        span.setAttribute('aria-label', sidebar ? 'Remove' : 'Remove');
+    function createWatchedIndicator(type, idx, extra, sidebar) {
+      const watched = type === 'movie'
+        ? isMovieWatched(idx)
+        : isEpisodeWatched(idx, extra);
+      if (!watched) return null;
+      const span = document.createElement('span');
+      span.className = sidebar ? 'watched-indicator-sidebar' : 'watched-indicator';
+      span.style.cursor = 'pointer';
+      span.tabIndex = 0;
+      span.setAttribute('role', 'button');
+      span.setAttribute('aria-label', sidebar ? 'Remove' : 'Remove');
+      span.textContent = sidebar ? '✔️' : '✔️ Watched';
+      span.addEventListener('mouseenter', () => {
+        span.textContent = sidebar ? '❌' : '❌ Remove';
+      });
+      span.addEventListener('mouseleave', () => {
         span.textContent = sidebar ? '✔️' : '✔️ Watched';
+      });
+      span.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (type === 'movie') {
+          unmarkMovieWatched(idx);
+        } else {
+          unmarkEpisodeWatched(idx, extra);
+        }
+        if (type === 'movie') {
+          renderGallery(sortItems(moviesData, movieSort ? movieSort.value : 'default'), 'movie-gallery', 'movie.html', 'movie');
+        } else {
+          renderGallery(sortItems(episodesData, episodesSort ? episodesSort.value : 'default'), 'episodes-gallery', 'episodes.html', 'season');
+        }
+      });
+      span.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          span.click();
+        }
+      });
+      return span;
+    }
 
-        span.addEventListener('mouseenter', () => {
-          span.textContent = sidebar ? '❌' : '❌ Remove';
-        });
-        span.addEventListener('mouseleave', () => {
-          span.textContent = sidebar ? '✔️' : '✔️ Watched';
-        });
-        span.addEventListener('click', (e) => {
-          e.stopPropagation();
-          if (type === 'movie') {
-            unmarkMovieWatched(idx);
-          } else {
-            unmarkEpisodeWatched(idx, extra);
+    function createCard(item, index, page, paramName, containerId) {
+      const card = document.createElement('article');
+      card.className = 'movie-card';
+      const cardId = `card-${paramName || 'item'}-${index}`;
+      card.setAttribute('aria-labelledby', cardId);
+      if (page) {
+        card.tabIndex = 0;
+        card.setAttribute('role', 'button');
+        card.setAttribute('aria-label', `View ${item.title || 'item'} details`);
+        card.onclick = () => {
+          if (page === 'movie.html') {
+            markMovieWatched(index);
           }
-          if (type === 'movie') {
-            renderGallery(sortItems(moviesData, movieSort ? movieSort.value : 'default'), 'movie-gallery', 'movie.html', 'movie');
-          } else {
-            renderGallery(sortItems(episodesData, episodesSort ? episodesSort.value : 'default'), 'episodes-gallery', 'episodes.html', 'season');
-          }
-        });
-        span.addEventListener('keydown', (e) => {
+          window.location.href = `./${page}?${paramName}=${index}`;
+        };
+        card.addEventListener('keydown', (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
-            span.click();
-          }
-        });
-        return span;
-      };
-
-      const createCard = (item, index, page, paramName, containerId) => {
-        const card = document.createElement('article');
-        card.className = 'movie-card';
-
-        const cardId = `card-${paramName || 'item'}-${index}`;
-        card.setAttribute('aria-labelledby', cardId);
-
-        if (page) {
-          card.tabIndex = 0;
-          card.setAttribute('role', 'button');
-          card.setAttribute('aria-label', `View ${item.title || 'item'} details`);
-
-          card.onclick = () => {
+            e.preventDefault();
             if (page === 'movie.html') {
               markMovieWatched(index);
             }
             window.location.href = `./${page}?${paramName}=${index}`;
-          };
-
-          card.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              if (page === 'movie.html') {
-                markMovieWatched(index);
-              }
-              window.location.href = `./${page}?${paramName}=${index}`;
-            }
-          });
-
-          if (item.embed_link && window.utils.createPreviewVideo) {
-            let previewTimer;
-            let videoElement = null;
-            let previewStarted = false;
-            let volumeBtn = null;
-
-            const updateVolumeBtn = () => {
-              if (!volumeBtn) return;
-              volumeBtn.innerHTML = window.previewMuted ? '🔇' : '🔊';
-              volumeBtn.setAttribute('aria-label', window.previewMuted ? 'Unmute preview' : 'Mute preview');
-            };
-
-            const playPreview = () => {
-              if (!videoElement) return;
-              videoElement.muted = window.previewMuted;
-              const seekAndPlay = () => {
-                try {
-                  videoElement.currentTime = Math.max((videoElement.duration || 0) / 2 - 10, 0);
-                  videoElement.play()
-                    .then(() => {
-                      videoElement.classList.add('active');
-                    })
-                    .catch(err => {
-                      console.warn('Preview video playback failed:', err);
-                    });
-                } catch (e) {
-                  videoElement.play().catch(() => {});
-                }
-              };
-              if (videoElement.readyState >= 1) {
-                seekAndPlay();
-              } else {
-                videoElement.addEventListener('loadedmetadata', seekAndPlay, { once: true });
-              }
-            };
-
-            const stopPreview = () => {
-              clearTimeout(previewTimer);
-              previewStarted = false;
-              if (videoElement) {
-                videoElement.classList.remove('active');
-                videoElement.pause();
-                videoElement.remove();
-                videoElement = null;
-              }
-              if (volumeBtn && card.contains(volumeBtn)) {
-                card.removeChild(volumeBtn);
-                volumeBtn = null;
-              }
-              window.removeEventListener('previewMuteChanged', updateVolumeBtn);
-            };
-
-            const startPreview = () => {
-              clearTimeout(previewTimer);
-              previewTimer = setTimeout(() => {
-                if (!previewStarted) {
-                  previewStarted = true;
-                  videoElement = window.utils.createPreviewVideo(item.embed_link, item.title || 'Preview');
-                  if (videoElement) {
-                    volumeBtn = document.createElement('button');
-                    volumeBtn.className = 'preview-volume-btn';
-                    updateVolumeBtn();
-                    volumeBtn.onclick = (e) => {
-                      e.stopPropagation();
-                      window.togglePreviewMute();
-                    };
-                    card.appendChild(videoElement);
-                    card.appendChild(volumeBtn);
-                    window.addEventListener('previewMuteChanged', updateVolumeBtn);
-                    playPreview();
-                  }
-                } else if (videoElement) {
-                  window.addEventListener('previewMuteChanged', updateVolumeBtn);
-                  videoElement.muted = window.previewMuted;
-                  updateVolumeBtn();
-                  playPreview();
-                  if (volumeBtn && !card.contains(volumeBtn)) {
-                    card.appendChild(volumeBtn);
-                  }
-                }
-              }, 1000);
-            };
-
-            card.addEventListener('mouseenter', startPreview);
-            card.addEventListener('mouseleave', stopPreview);
-            card.addEventListener('focus', startPreview);
-            card.addEventListener('blur', stopPreview);
           }
-        }
-
-        const img = document.createElement('img');
-        img.src = item.thumbnail || '';
-        img.alt = `${item.title || 'Untitled'} thumbnail`;
-        img.loading = 'lazy';
-        img.setAttribute('decoding', 'async');
-        img.onerror = () => {
-          img.src = 'placeholder.jpg';
-          img.alt = 'Image could not be loaded';
-          img.onerror = null;
-        };
-
-        const title = document.createElement('h3');
-        title.id = cardId;
-        title.className = 'title';
-        title.textContent = item.title || 'Untitled';
-
-        const titleContainer = document.createElement('div');
-        titleContainer.className = 'title-container';
-        titleContainer.appendChild(title);
-
-        if (page === 'movie.html') {
-          const watched = createWatchedIndicator('movie', index, null, false);
-          if (watched) {
-            titleContainer.appendChild(watched);
-          }
-        }
-
-        card.appendChild(img);
-        card.appendChild(titleContainer);
-
-        if (containerId === 'episodes-gallery' && Array.isArray(item.embed_links)) {
-        }
-
-        return card;
+        });
+      }
+      const img = document.createElement('img');
+      img.src = item.thumbnail || '';
+      img.alt = `${item.title || 'Untitled'} thumbnail`;
+      img.loading = 'lazy';
+      img.setAttribute('decoding', 'async');
+      img.onerror = () => {
+        img.src = 'placeholder.jpg';
+        img.alt = 'Image could not be loaded';
+        img.onerror = null;
       };
-
-      const renderGallery = (items, containerId, page, paramName) => {
-        const gallery = getElement(containerId);
-        if (!gallery) return;
-
-        gallery.innerHTML = '';
-
-        if (!Array.isArray(items) || items.length === 0) {
-          gallery.innerHTML = '<p style="opacity: 0.6;" role="status">No items available</p>';
-          return;
+      const title = document.createElement('h3');
+      title.id = cardId;
+      title.className = 'title';
+      title.textContent = item.title || 'Untitled';
+      const titleContainer = document.createElement('div');
+      titleContainer.className = 'title-container';
+      titleContainer.appendChild(title);
+      if (page === 'movie.html') {
+        const watched = createWatchedIndicator('movie', index, null, false);
+        if (watched) {
+          titleContainer.appendChild(watched);
         }
+      }
+      card.appendChild(img);
+      card.appendChild(titleContainer);
+      if (containerId === 'coming-soon-gallery' && item.description) {
+        const description = document.createElement('div');
+        description.className = 'description';
+        const sanitizedDescription = sanitizeHTML(item.description);
+        const formattedDescription = sanitizedDescription.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+        description.innerHTML = formattedDescription;
+        card.appendChild(description);
+      }
+      return card;
+    }
 
-        const fragment = document.createDocumentFragment();
+    function renderGallery(items, containerId, page, paramName) {
+      const gallery = document.getElementById(containerId);
+      if (!gallery) return;
+      gallery.innerHTML = '';
+      if (!Array.isArray(items) || items.length === 0) {
+        gallery.innerHTML = '<p style="opacity: 0.6;" role="status">No items available</p>';
+        return;
+      }
+      const fragment = document.createDocumentFragment();
+      items.forEach((item, index) => {
+        const card = createCard(item, index, page, paramName, containerId);
+        fragment.appendChild(card);
+      });
+      gallery.appendChild(fragment);
+    }
 
-        items.forEach((item, index) => {
-          const card = createCard(item, index, page, paramName, containerId);
-
-          if (containerId === 'coming-soon-gallery' && item.description) {
-            const description = document.createElement('div');
-            description.className = 'description';
-
-            const sanitizedDescription = sanitizeHTML(item.description);
-
-            const formattedDescription = sanitizedDescription.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-
-            description.innerHTML = formattedDescription;
-            card.appendChild(description);
-          }
-
-          fragment.appendChild(card);
+    let moviesData = [];
+    let episodesData = [];
+    function sortItems(items, sortType) {
+      if (sortType === 'title') {
+        return [...items].sort((a, b) => {
+          const tA = (a.title || '').toLowerCase();
+          const tB = (b.title || '').toLowerCase();
+          return tA.localeCompare(tB);
         });
+      }
+      return [...items];
+    }
+    const movieSort = document.getElementById('movie-sort');
+    const episodesSort = document.getElementById('episodes-sort');
+    if (movieSort) {
+      movieSort.addEventListener('change', () => {
+        const sorted = sortItems(moviesData, movieSort.value);
+        renderGallery(sorted, 'movie-gallery', 'movie.html', 'movie');
+      });
+    }
+    if (episodesSort) {
+      episodesSort.addEventListener('change', () => {
+        const sorted = sortItems(episodesData, episodesSort.value);
+        renderGallery(sorted, 'episodes-gallery', 'episodes.html', 'season');
+      });
+    }
 
-        gallery.appendChild(fragment);
-      };
-
-      let moviesData = [];
-      let episodesData = [];
-      let episodesOriginal = [];
-      let moviesOriginal = [];
-
-      function sortItems(items, sortType) {
-        if (sortType === 'title') {
-          return [...items].sort((a, b) => {
-            const tA = (a.title || '').toLowerCase();
-            const tB = (b.title || '').toLowerCase();
-            return tA.localeCompare(tB);
-          });
+    async function loadAllData() {
+      const loadingStatuses = ['movie-gallery', 'coming-soon-gallery', 'episodes-gallery'].map(id => {
+        const container = document.getElementById(id);
+        if (container) {
+          container.setAttribute('aria-busy', 'true');
         }
-        return [...items];
-      }
-
-      const movieSort = getElement('movie-sort');
-      const episodesSort = getElement('episodes-sort');
-
-      if (movieSort) {
-        movieSort.addEventListener('change', () => {
-          const sorted = sortItems(moviesData, movieSort.value);
-          renderGallery(sorted, 'movie-gallery', 'movie.html', 'movie');
-        });
-      }
-      if (episodesSort) {
-        episodesSort.addEventListener('change', () => {
-          const sorted = sortItems(episodesData, episodesSort.value);
-          renderGallery(sorted, 'episodes-gallery', 'episodes.html', 'season');
-        });
-      }
+        return container;
+      });
 
       try {
-        const loadingStatuses = ['movie-gallery', 'coming-soon-gallery', 'episodes-gallery'].map(id => {
-          const container = getElement(id);
-          if (container) {
-            container.setAttribute('aria-busy', 'true');
-          }
-          return container;
-        });
-
         const results = await Promise.allSettled([
-          utilsFetchData('./data/movie_data.json'),
-          utilsFetchData('./data/comingsoon_data.json'),
-          utilsFetchData('./data/episodes_data.json')
+          fetchData('./data/movie_data.json'),
+          fetchData('./data/comingsoon_data.json'),
+          fetchData('./data/episodes_data.json')
         ]);
-
-        loadingStatuses.forEach(container => {
-          if (container) container.setAttribute('aria-busy', 'false');
-        });
 
         const [moviesResult, upcomingResult, episodesResult] = results;
 
         if (moviesResult.status === 'fulfilled') {
           moviesData = moviesResult.value;
-          moviesOriginal = [...moviesResult.value];
           renderGallery(sortItems(moviesData, movieSort ? movieSort.value : 'default'), 'movie-gallery', 'movie.html', 'movie');
         } else {
           handleError(
             moviesResult.reason,
-            'movie-gallery',
+            document.getElementById('movie-gallery'),
             '<p>Movies will be available soon. Please check back later.</p>'
           );
         }
 
         if (upcomingResult.status === 'fulfilled') {
-          renderGallery(upcomingResult.value, 'coming-soon-gallery', null, null);
+          const upcomingData = upcomingResult.value;
+          if (!Array.isArray(upcomingData)) {
+            throw new Error('Invalid upcoming releases data format');
+          }
+          renderGallery(upcomingData, 'coming-soon-gallery', null, null);
         } else {
           handleError(
             upcomingResult.reason,
-            'coming-soon-gallery',
-            '<p>Coming soon information is currently unavailable.</p>'
+            document.getElementById('coming-soon-gallery'),
+            '<p>Unable to load upcoming releases. Please refresh the page.</p>'
           );
         }
 
         if (episodesResult.status === 'fulfilled') {
-          episodesData = episodesResult.value.map((season, index) => {
-            const firstEpisodeEmbed = season.embed_links && season.embed_links.length > 0 ?
-              season.embed_links[0].embed_link : null;
-
-            return {
-              ...season,
-              embed_link: firstEpisodeEmbed
-            };
-          });
-          episodesOriginal = [...episodesData];
+          episodesData = episodesResult.value;
           renderGallery(sortItems(episodesData, episodesSort ? episodesSort.value : 'default'), 'episodes-gallery', 'episodes.html', 'season');
         } else {
           handleError(
             episodesResult.reason,
-            'episodes-gallery',
+            document.getElementById('episodes-gallery'),
             '<p>Episodes will be available soon. Please check back later.</p>'
           );
         }
-
-      } catch (err) {
-        console.error("Failed to load data:", err);
-        handleError(err, document.body, '<p>We are experiencing technical difficulties. Please try refreshing the page.</p>');
+      } catch (error) {
+        console.error('Error loading data:', error);
+        ['movie-gallery', 'coming-soon-gallery', 'episodes-gallery'].forEach(id => {
+          const container = document.getElementById(id);
+          if (container) {
+            container.innerHTML = '<p>An error occurred while loading content. Please refresh the page.</p>';
+          }
+        });
+      } finally {
+        loadingStatuses.forEach(container => {
+          if (container) container.setAttribute('aria-busy', 'false');
+        });
       }
-    });
+    }
+
+    loadAllData();
   </script>
 
 </body>
