@@ -202,28 +202,26 @@ body {
 }
 
 #close-btn {
-  font-size: 24px;
-  cursor: pointer;
-  background-color: var(--card-bg);
-  color: var(--text-color);
-  border: none;
-  border-radius: 4px;
-  padding: 4px 12px;
-  margin-left: 8px;
-  transition: background-color 0.3s, color 0.3s;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
+  width: 36px;
+  height: 36px;
+  font-size: 2rem;
   line-height: 1;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 8px;
+  color: inherit;
+  transition: background 0.2s;
+  border-radius: 50%;
 }
 
-#close-btn:hover, #close-btn:focus {
-  background-color: var(--search-bg);
-  color: var(--link-hover);
-  outline: 2px solid var(--focus-outline);
+#close-btn:focus, #close-btn:hover {
+  background: rgba(0,0,0,0.08);
+  outline: none;
 }
 
 #global-search {
@@ -860,4 +858,50 @@ button:hover,
   font-size: 1.2rem;
   cursor: pointer;
   pointer-events: auto;
+}
+
+/* Movie page specific styles */
+.header-background {
+  background-image: url('https://thumbnail');
+}
+
+.error-message {
+  color: #d32f2f;
+  font-size: 1.2rem;
+  text-align: center;
+  padding: 20px;
+  background-color: #ffebee;
+  border-radius: 4px;
+  margin: 20px 0;
+  white-space: pre-wrap;
+}
+
+.error-message a {
+  color: #1976d2;
+  text-decoration: underline;
+  font-weight: bold;
+}
+
+.error-message a:hover {
+  text-decoration: none;
+}
+
+.content-text {
+  text-align: center;
+}
+
+.content-text pre {
+  white-space: pre-wrap;
+  text-align: center;
+}
+
+.watched-indicator {
+  margin-top: 8px;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+/* Episodes page specific styles */
+.header-background {
+  background-image: url('https://thumbnail');
 }
