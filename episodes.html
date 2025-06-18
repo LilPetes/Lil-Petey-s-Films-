@@ -133,8 +133,7 @@
         if (episode.embed_link) {
           const video = document.createElement('iframe');
           video.src = episode.embed_link;
-          video.width = '100%';
-          video.height = '400';
+          video.className = 'content-iframe';
           video.title = episode.title || `Episode ${index + 1}`;
           video.setAttribute('loading', 'lazy');
           video.setAttribute('allowfullscreen', '');
