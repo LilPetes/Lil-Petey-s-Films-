@@ -52,6 +52,7 @@ export function initSidebar() {
     elements.overlay.classList.add('active');
     elements.toggle.setAttribute('aria-expanded', 'true');
     elements.searchInput.focus();
+    document.body.style.overflow = 'hidden';
   };
 
   const closeSidebar = () => {
@@ -59,6 +60,7 @@ export function initSidebar() {
     elements.overlay.classList.remove('active');
     elements.toggle.setAttribute('aria-expanded', 'false');
     elements.toggle.focus();
+    document.body.style.overflow = '';
   };
 
   const focusSidebarSearch = (e) => {

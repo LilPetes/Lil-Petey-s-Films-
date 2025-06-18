@@ -221,7 +221,12 @@ body {
 
 #close-btn:focus, #close-btn:hover {
   background: rgba(0,0,0,0.08);
-  outline: none;
+}
+
+#close-btn:focus-visible {
+  outline: 2px solid var(--focus-outline);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--focus-shadow);
 }
 
 #global-search {
@@ -429,7 +434,7 @@ html.dark-theme button.collapsible-header:focus {
 }
 
 .movie-card .title {
-  padding: 0;
+  padding: 10px;
   margin: 0;
   font-size: 1.1rem;
   color: var(--text-color);
@@ -602,13 +607,6 @@ html.dark-theme button.collapsible-header:focus {
   padding: 2px 6px;
 }
 
-.movie-card .title {
-  padding: 10px;
-  font-size: 1.1rem;
-  color: var(--text-color);
-  transition: color 0.3s ease;
-}
-
 /* Unavailable message styles */
 .unavailable-message {
   color: #999;
@@ -686,7 +684,7 @@ html.dark-theme button.collapsible-header:focus {
   top: 0;
 }
 
-/* Error message styling */
+/* Consolidated error message styles */
 .error-message {
   color: var(--error-color);
   font-size: 1.2rem;
@@ -863,27 +861,6 @@ button:hover,
 /* Movie page specific styles */
 .header-background {
   background-image: url('https://thumbnail');
-}
-
-.error-message {
-  color: #d32f2f;
-  font-size: 1.2rem;
-  text-align: center;
-  padding: 20px;
-  background-color: #ffebee;
-  border-radius: 4px;
-  margin: 20px 0;
-  white-space: pre-wrap;
-}
-
-.error-message a {
-  color: #1976d2;
-  text-decoration: underline;
-  font-weight: bold;
-}
-
-.error-message a:hover {
-  text-decoration: none;
 }
 
 .content-text {
