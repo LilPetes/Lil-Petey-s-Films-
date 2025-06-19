@@ -178,6 +178,7 @@
                 previewVideo.play().catch(() => {});
               }, { once: true });
             }
+            volumeBtn = card.querySelector('.preview-volume-btn');
             if (volumeBtn) volumeBtn.style.display = '';
           }
           previewLoaded = true;
@@ -192,6 +193,7 @@
           previewVideo.classList.remove('active');
           previewVideo.pause();
           previewVideo.currentTime = 0;
+          volumeBtn = card.querySelector('.preview-volume-btn');
           if (volumeBtn) volumeBtn.style.display = 'none';
         }
       });
