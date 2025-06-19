@@ -270,14 +270,6 @@ export function createPreviewVideo(src, title, muted = true) {
   video.playsInline = true;
   video.disablePictureInPicture = true;
   video.className = 'preview-video';
-  video.style.width = '100%';
-  video.style.height = '100%';
-  video.style.objectFit = 'cover';
-  video.style.position = 'absolute';
-  video.style.top = '0';
-  video.style.left = '0';
-  video.style.opacity = '0';
-  video.style.transition = 'opacity 0.5s';
   video.setAttribute('aria-hidden', 'true');
 
   const source = document.createElement('source');
