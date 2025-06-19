@@ -131,16 +131,13 @@
       const embedVideo = document.querySelector('.embed-section video');
       if (embedVideo) {
         if (movieData.embed_link) {
-          console.log('Setting video source:', movieData.embed_link);
           embedVideo.src = movieData.embed_link;
           embedVideo.title = `${movieData.title || 'Movie'} content`;
           embedVideo.setAttribute('aria-label', `${movieData.title || 'Movie'} player`);
           embedVideo.setAttribute('poster', movieData.thumbnail || 'placeholder.jpg');
           embedVideo.setAttribute('controls', '');
           embedVideo.setAttribute('loading', 'lazy');
-          console.log('Video element configured:', embedVideo);
           embedVideo.onerror = () => {
-            console.error('Video failed to load');
             const parent = embedVideo.parentElement;
             if (parent) {
               parent.innerHTML = `
@@ -149,12 +146,6 @@
                 </div>
               `;
             }
-          };
-          embedVideo.onloadstart = () => {
-            console.log('Video loading started');
-          };
-          embedVideo.oncanplay = () => {
-            console.log('Video can play');
           };
         } else {
           const parent = embedVideo.parentElement;

@@ -97,6 +97,5 @@ export function loadSidebarData(url, container, linkTemplate) {
           <p>Failed to load data. Please try again later.</p>
         </div>
       `;
-      console.error('Error loading sidebar data:', error);
     });
 } 

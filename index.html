@@ -360,7 +360,6 @@
           );
         }
       } catch (error) {
-        console.error('Error loading data:', error);
         ['movie-gallery', 'coming-soon-gallery', 'episodes-gallery'].forEach(id => {
           const container = document.getElementById(id);
           if (container) {

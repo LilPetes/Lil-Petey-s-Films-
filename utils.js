@@ -14,17 +14,11 @@ const cleanupInterval = setInterval(() => {
 
 export function getElement(selector) {
   const element = document.querySelector(selector);
-  if (!element) {
-    console.warn(`Element not found: ${selector}`);
-  }
   return element;
 }
 
 export function getElementById(id) {
   const element = document.getElementById(id);
-  if (!element) {
-    console.warn(`Element not found with id: ${id}`);
-  }
   return element;
 }
 
@@ -82,7 +76,6 @@ export async function fetchData(url, options = {}) {
 }
 
 export function handleError(error, element) {
-  console.error('Error:', error);
   if (element) {
     element.innerHTML = `
       <div class="error-message">
@@ -280,30 +273,36 @@ export function createPreviewVideo(src, title, muted = true) {
   return video;
 }
 
-export async function loadSidebarData(url, container, linkGenerator) {
-  try {
-    const data = await fetchData(url);
-    if (!Array.isArray(data)) {
-      throw new Error('Invalid data format');
-    }
+export function loadSidebarData(url, container, linkTemplate) {
+  if (!container) return;
 
-    container.innerHTML = '';
-    const fragment = document.createDocumentFragment();
+  container.innerHTML = '<p>Loading...</p>';
 
-    data.forEach((item, index) => {
-      const link = document.createElement('a');
-      link.href = linkGenerator(index);
-      link.textContent = item.title || 'Untitled';
-      link.setAttribute('data-title', item.title || 'Untitled');
-      link.setAttribute('role', 'menuitem');
-      fragment.appendChild(link);
+  fetchData(url)
+    .then(data => {
+      if (!Array.isArray(data)) {
+        throw new Error('Invalid data format');
+      }
+
+      const links = data.map((item, index) => {
+        const link = document.createElement('a');
+        link.href = linkTemplate(index);
+        link.textContent = item.title || `Item ${index + 1}`;
+        link.setAttribute('role', 'menuitem');
+        link.setAttribute('data-title', item.title || `Item ${index + 1}`);
+        return link;
+      });
+
+      container.innerHTML = '';
+      links.forEach(link => container.appendChild(link));
+    })
+    .catch(error => {
+      container.innerHTML = `
+        <div class="error-message">
+          <p>Failed to load data. Please try again later.</p>
+        </div>
+      `;
     });
-
-    container.appendChild(fragment);
-  } catch (error) {
-    console.error('Error loading sidebar data:', error);
-    container.innerHTML = '<p style="opacity: 0.6;">Failed to load content</p>';
-  }
 }
 
 export default {

@@ -141,7 +141,6 @@
 
         if (episode.embed_link) {
           const video = document.createElement('video');
-          console.log('Creating video for episode:', episode.title, 'with source:', episode.embed_link);
           video.src = episode.embed_link;
           video.classList.add('content-video');
           video.title = episode.title || `Episode ${index + 1}`;
@@ -151,18 +150,11 @@
             video.setAttribute('poster', episode.thumbnail);
           }
           video.onerror = () => {
-            console.error('Episode video failed to load:', episode.title);
             const unavailableMsg = document.createElement('p');
             unavailableMsg.textContent = 'Video failed to load';
             unavailableMsg.className = 'unavailable-message';
             unavailableMsg.setAttribute('role', 'status');
             video.parentElement.replaceChild(unavailableMsg, video);
-          };
-          video.onloadstart = () => {
-            console.log('Episode video loading started:', episode.title);
-          };
-          video.oncanplay = () => {
-            console.log('Episode video can play:', episode.title);
           };
           episodeElement.appendChild(video);
         } else {
