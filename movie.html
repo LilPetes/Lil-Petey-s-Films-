@@ -31,7 +31,7 @@
     </div> -->
 
     <div class="embed-section">
-      <iframe src="" class="content-iframe" title="Movie content" loading="lazy"></iframe>
+      <video src="" class="content-video" title="Movie content" poster="" controls loading="lazy"></video>
     </div>
   </main>
 
@@ -119,17 +119,17 @@
           headerText.parentNode.insertBefore(indicator, headerText.nextSibling);
         }
       }
-      const embedFrame = document.querySelector('.embed-section iframe');
-      if (embedFrame) {
+      const embedVideo = document.querySelector('.embed-section video');
+      if (embedVideo) {
         if (movieData.embed_link) {
-          embedFrame.src = movieData.embed_link;
-          embedFrame.title = `${movieData.title || 'Movie'} content`;
-          embedFrame.setAttribute('aria-label', `${movieData.title || 'Movie'} player`);
-          embedFrame.setAttribute('loading', 'lazy');
-          embedFrame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation');
-          embedFrame.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+          embedVideo.src = movieData.embed_link;
+          embedVideo.title = `${movieData.title || 'Movie'} content`;
+          embedVideo.setAttribute('aria-label', `${movieData.title || 'Movie'} player`);
+          embedVideo.setAttribute('poster', movieData.thumbnail || 'placeholder.jpg');
+          embedVideo.setAttribute('controls', '');
+          embedVideo.setAttribute('loading', 'lazy');
         } else {
-          const parent = embedFrame.parentElement;
+          const parent = embedVideo.parentElement;
           if (parent) {
             parent.innerHTML = `
               <div class="error-message" role="alert">

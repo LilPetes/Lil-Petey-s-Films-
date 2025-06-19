@@ -131,13 +131,15 @@
         episodeElement.appendChild(descriptionElement);
 
         if (episode.embed_link) {
-          const video = document.createElement('iframe');
+          const video = document.createElement('video');
           video.src = episode.embed_link;
-          video.className = 'content-iframe';
+          video.className = 'content-video';
           video.title = episode.title || `Episode ${index + 1}`;
           video.setAttribute('loading', 'lazy');
-          video.setAttribute('allowfullscreen', '');
-          video.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation');
+          video.setAttribute('controls', '');
+          if (episode.thumbnail) {
+            video.setAttribute('poster', episode.thumbnail);
+          }
           episodeElement.appendChild(video);
         } else {
           const unavailableMsg = document.createElement('p');
