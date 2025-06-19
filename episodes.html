@@ -133,7 +133,7 @@
         if (episode.embed_link) {
           const video = document.createElement('video');
           video.src = episode.embed_link;
-          video.className = 'content-video';
+          video.classList.add('content-video');
           video.title = episode.title || `Episode ${index + 1}`;
           video.setAttribute('loading', 'lazy');
           video.setAttribute('controls', '');
