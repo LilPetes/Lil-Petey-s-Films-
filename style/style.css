@@ -150,6 +150,20 @@ body {
   word-wrap: break-word;
 }
 
+.movie-description,
+.season-description {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  margin: 0;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: var(--text-color);
+  background: none;
+  border: none;
+}
+
 /* Sidebar styles */
 #menu-toggle {
   font-size: 30px;
@@ -498,6 +512,16 @@ html.dark-theme button.collapsible-header:focus {
   max-width: 1000px;
   margin: 40px auto;
   padding: 0 20px;
+  position: relative;
+  height: 600px;
+}
+
+.embed-section video {
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  border: 2px solid var(--border-color);
+  object-fit: contain;
 }
 
 .embed-section iframe {
@@ -542,6 +566,15 @@ html.dark-theme button.collapsible-header:focus {
   width: 100%;
   height: 400px;
   border: none;
+}
+
+.episode video {
+  border-radius: 10px;
+  margin-top: 20px;
+  width: 100%;
+  height: 400px;
+  border: 2px solid var(--border-color);
+  object-fit: contain;
 }
 
 /* Sort controls styling */
@@ -913,16 +946,11 @@ button:hover,
 .content-video {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  position: absolute;
-  top: 0;
-  left: 0;
-  opacity: 0;
+  object-fit: contain;
+  border-radius: 10px;
+  border: 2px solid var(--border-color);
   transition: opacity 0.5s;
   z-index: 1;
   pointer-events: auto;
-}
-
-.content-video.active {
-  opacity: 1 !important;
+  opacity: 1;
 }

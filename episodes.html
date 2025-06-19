@@ -19,7 +19,8 @@
     <div class="content-section">
       <img src="" alt="Season thumbnail" loading="lazy">
       <div class="content-text">
-        <pre role="alert" class="error-message">Invalid season ID. Please <a href="./index.html">return to the home page</a>.</pre>
+        <div class="error-message" style="display: none;">Invalid season ID. Please <a href="./index.html">return to the home page</a>.</div>
+        <div class="season-description"></div>
       </div>
     </div>
 
@@ -42,10 +43,10 @@
 
     document.addEventListener('DOMContentLoaded', async () => {
       const containers = {
-        error: '.content-text pre',
+        error: '.error-message',
         title: '.header-text',
         content: '.content-section img',
-        description: '.content-text pre'
+        description: '.season-description'
       };
       const params = new URLSearchParams(window.location.search);
       const seasonIdx = parseInt(params.get('season'), 10);
@@ -59,6 +60,10 @@
         const titleEl = document.querySelector(containers.title);
         const imgEl = document.querySelector(containers.content);
         const descEl = document.querySelector(containers.description);
+        const errorEl = document.querySelector(containers.error);
+        
+        if (errorEl) errorEl.style.display = 'none';
+        
         if (titleEl) titleEl.textContent = seasonData.title || `Season ${seasonIdx + 1}`;
         if (imgEl) {
           imgEl.src = seasonData.thumbnail || '';
@@ -74,7 +79,11 @@
         }
         if (descEl) descEl.textContent = seasonData.description || '';
       } catch (error) {
-        handleError(error, document.querySelector(containers.error));
+        const errorEl = document.querySelector(containers.error);
+        if (errorEl) {
+          errorEl.style.display = 'block';
+          errorEl.innerHTML = `Invalid season ID. Please <a href="./index.html">return to the home page</a>.`;
+        }
         return;
       }
       const episodesList = document.getElementById('episodes-list');
@@ -132,6 +141,7 @@
 
         if (episode.embed_link) {
           const video = document.createElement('video');
+          console.log('Creating video for episode:', episode.title, 'with source:', episode.embed_link);
           video.src = episode.embed_link;
           video.classList.add('content-video');
           video.title = episode.title || `Episode ${index + 1}`;
@@ -140,6 +150,20 @@
           if (episode.thumbnail) {
             video.setAttribute('poster', episode.thumbnail);
           }
+          video.onerror = () => {
+            console.error('Episode video failed to load:', episode.title);
+            const unavailableMsg = document.createElement('p');
+            unavailableMsg.textContent = 'Video failed to load';
+            unavailableMsg.className = 'unavailable-message';
+            unavailableMsg.setAttribute('role', 'status');
+            video.parentElement.replaceChild(unavailableMsg, video);
+          };
+          video.onloadstart = () => {
+            console.log('Episode video loading started:', episode.title);
+          };
+          video.oncanplay = () => {
+            console.log('Episode video can play:', episode.title);
+          };
           episodeElement.appendChild(video);
         } else {
           const unavailableMsg = document.createElement('p');
