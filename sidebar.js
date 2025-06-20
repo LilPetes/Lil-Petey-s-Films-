@@ -149,7 +149,7 @@ export function initSidebar() {
         loadSidebarData('./data/episodes_data.json', elements.seasonLinks, (i) => `./episodes.html?season=${i}`)
       ]);
     } catch (error) {
-      console.error('Failed to load sidebar data:', error);
+      container.innerHTML = '<p style="opacity: 0.6;">Failed to load content</p>';
     }
   };
 

@@ -19,7 +19,8 @@
     <div class="content-section">
       <img src="" alt="Movie thumbnail" loading="lazy">
       <div class="content-text">
-        <pre role="alert" class="error-message">Invalid movie ID. Please <a href="./index.html">return to the home page</a>.</pre>
+        <div class="error-message" style="display: none;">Invalid movie ID. Please <a href="./index.html">return to the home page</a>.</div>
+        <div class="movie-description"></div>
       </div>
     </div>
 
@@ -51,10 +52,10 @@
 
     document.addEventListener('DOMContentLoaded', async () => {
       const containers = {
-        error: '.content-text pre',
+        error: '.error-message',
         title: '.header-text',
         content: '.content-section img',
-        description: '.content-text pre'
+        description: '.movie-description'
       };
       const params = new URLSearchParams(window.location.search);
       const movieIdx = parseInt(params.get('movie'), 10);
@@ -68,6 +69,10 @@
         const titleEl = document.querySelector(containers.title);
         const imgEl = document.querySelector(containers.content);
         const descEl = document.querySelector(containers.description);
+        const errorEl = document.querySelector(containers.error);
+        
+        if (errorEl) errorEl.style.display = 'none';
+        
         if (titleEl) titleEl.textContent = movieData.title || `Movie ${movieIdx + 1}`;
         if (imgEl) {
           imgEl.src = movieData.thumbnail || '';
@@ -83,7 +88,11 @@
         }
         if (descEl) descEl.textContent = movieData.description || '';
       } catch (error) {
-        handleError(error, document.querySelector(containers.error));
+        const errorEl = document.querySelector(containers.error);
+        if (errorEl) {
+          errorEl.style.display = 'block';
+          errorEl.innerHTML = `Invalid movie ID. Please <a href="./index.html">return to the home page</a>.`;
+        }
         return;
       }
       markMovieWatched(movieIdx);
@@ -128,6 +137,16 @@
           embedVideo.setAttribute('poster', movieData.thumbnail || 'placeholder.jpg');
           embedVideo.setAttribute('controls', '');
           embedVideo.setAttribute('loading', 'lazy');
+          embedVideo.onerror = () => {
+            const parent = embedVideo.parentElement;
+            if (parent) {
+              parent.innerHTML = `
+                <div class="error-message" role="alert">
+                  <p>Failed to load video. Please try again later.</p>
+                </div>
+              `;
+            }
+          };
         } else {
           const parent = embedVideo.parentElement;
           if (parent) {
