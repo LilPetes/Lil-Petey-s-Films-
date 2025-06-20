@@ -1,2 +1,5 @@
 .idea/
 .vscode/
+data/backup_*
+data/organized_data.json
+data/data_summary.json
