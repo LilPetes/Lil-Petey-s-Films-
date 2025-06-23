@@ -2,3 +2,4 @@ exclude:
   - README.md
   - .gitignore
   - pyscripts/
+  - test.html
