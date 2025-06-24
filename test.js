@@ -88,11 +88,12 @@ function testSidebarKeyboard() {
 };
 
 function testThemeSwitch() {
-  const currentTheme = document.documentElement.getAttribute('data-theme') || 'default';
-  const themes = ['light', 'dark', 'midnight', 'ocean', 'forest'];
+  const currentThemeClass = document.documentElement.className || 'dark-mode';
+  const currentTheme = currentThemeClass.replace('-mode', '');
+  const themes = ['light', 'dark', 'oled'];
   const nextThemeIndex = (themes.indexOf(currentTheme) + 1) % themes.length;
   const nextTheme = themes[nextThemeIndex];
-  document.documentElement.setAttribute('data-theme', nextTheme);
+  document.documentElement.className = nextTheme + '-mode';
   localStorage.setItem('theme', nextTheme);
   document.getElementById('current-theme').textContent = nextTheme;
   logResult('theme-test-result', `Theme switched to: ${nextTheme}`, 'success');
