@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Lil Petey's Films+ - Watch movies and shows for free without ads">
   <title>Movie Library</title>
-  <link rel="icon" type="image/x-icon" href="./favicon.ico">
-  <link rel="stylesheet" href="./style/style.css">
+  <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
+  <link rel="stylesheet" href="assets/css/style.css">
   <link rel="preload" href="./data/movie_data.json" as="fetch" crossorigin>
   <link rel="preload" href="./data/episodes_data.json" as="fetch" crossorigin>
   <link rel="preload" href="./data/comingsoon_data.json" as="fetch" crossorigin>
@@ -64,6 +64,9 @@
     </section>
   </main>
 
-  <script type="module" src="./index.js"></script>
+  <div id="media-info-popup" class="media-info-popup"></div>
+  <script type="module" src="assets/js/utils.js"></script>
+  <script type="module" src="assets/js/sidebar.js"></script>
+  <script type="module" src="assets/js/index.js"></script>
 </body>
 </html>

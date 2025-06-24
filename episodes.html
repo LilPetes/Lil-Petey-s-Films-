@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta name="description" content="Watch episodes from Lil Petey's Films+">
   <title>Episodes</title>
-  <link rel="icon" type="image/x-icon" href="./favicon.ico">
-  <link rel="stylesheet" href="./style/style.css">
+  <link rel="icon" href="assets/images/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
 
@@ -19,7 +19,7 @@
     <div class="content-section">
       <img src="" alt="Season thumbnail" loading="lazy">
       <div class="content-text">
-        <div class="error-message" style="display: none;">Invalid season ID. Please <a href="./index.html">return to the home page</a>.</div>
+        <div class="error-message" style="display: none;">Invalid season ID. Please <a href="/index.html">return to the home page</a>.</div>
         <div class="season-description"></div>
       </div>
     </div>
@@ -28,6 +28,9 @@
   </main>
 
   <div id="sidebar-container"></div>
-  <script type="module" src="./episodes.js"></script>
+  <div id="media-info-popup" class="media-info-popup"></div>
+  <script type="module" src="assets/js/utils.js"></script>
+  <script type="module" src="assets/js/sidebar.js"></script>
+  <script type="module" src="assets/js/episodes.js"></script>
 </body>
 </html>
