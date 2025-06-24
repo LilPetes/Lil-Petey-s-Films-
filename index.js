@@ -135,25 +135,34 @@ function main() {
       card.className = 'movie-card';
       const cardId = `card-${paramName || 'item'}-${index}`;
       card.setAttribute('aria-labelledby', cardId);
+
+      const originalIndex = (paramName === 'movie' && moviesData) 
+        ? moviesData.findIndex(m => m.title === item.title)
+        : (paramName === 'season' && episodesData) 
+            ? episodesData.findIndex(s => s.title === item.title)
+            : -1;
+
       if (page) {
         card.tabIndex = 0;
         card.setAttribute('role', 'button');
         card.setAttribute('aria-label', `View ${item.title || 'item'} details`);
-        card.onclick = () => {
-          if (page === 'movie.html') {
-            markMovieWatched(index);
-          }
-          window.location.href = `./${page}?${paramName}=${index}`;
-        };
-        card.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            if (page === 'movie.html') {
-              markMovieWatched(index);
-            }
-            window.location.href = `./${page}?${paramName}=${index}`;
-          }
-        });
+        if (originalIndex !== -1) {
+            card.onclick = () => {
+              if (page === 'movie.html') {
+                markMovieWatched(originalIndex);
+              }
+              window.location.href = `./${page}?${paramName}=${originalIndex}`;
+            };
+            card.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                if (page === 'movie.html') {
+                  markMovieWatched(originalIndex);
+                }
+                window.location.href = `./${page}?${paramName}=${originalIndex}`;
+              }
+            });
+        }
       }
       const img = document.createElement('img');
       img.src = item.thumbnail || '';
@@ -175,10 +184,6 @@ function main() {
       const titleContainer = document.createElement('div');
       titleContainer.className = 'title-container';
       titleContainer.appendChild(title);
-
-      const originalIndex = (paramName === 'movie') 
-        ? moviesData.findIndex(m => m.title === item.title)
-        : episodesData.findIndex(s => s.title === item.title);
 
       if (page === 'movie.html') {
         if (originalIndex !== -1) {
