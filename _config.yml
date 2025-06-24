@@ -3,4 +3,4 @@ exclude:
   - .gitignore
   - pyscripts/
   - test.html
-  - test.js
+  - assets/js/test.js
