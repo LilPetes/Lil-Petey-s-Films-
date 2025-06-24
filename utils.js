@@ -27,6 +27,33 @@ export function updateElement(element, content) {
   element.innerHTML = content;
 }
 
+export function safeJSONParse(item) {
+  if (typeof item !== 'string') {
+    return null;
+  }
+  try {
+    return JSON.parse(item);
+  } catch (e) {
+    console.error('Failed to parse JSON from localStorage', e);
+    return null;
+  }
+}
+
+export function getStorageItem(key, defaultValue = '[]') {
+    if (typeof window.localStorage === 'undefined') {
+        return safeJSONParse(defaultValue);
+    }
+    const item = localStorage.getItem(key);
+    return safeJSONParse(item) || safeJSONParse(defaultValue);
+}
+
+export function setStorageItem(key, value) {
+  if (typeof window.localStorage === 'undefined') {
+    return;
+  }
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
 export function debounce(func, delay) {
   let timeout;
   return function(...args) {
@@ -61,8 +88,8 @@ export async function fetchData(url, options = {}) {
       throw new Error('Invalid JSON response from server');
     }
 
-    if (!Array.isArray(data)) {
-      throw new Error('Expected array data from server');
+    if (!Array.isArray(data) && typeof data !== 'object') {
+      throw new Error('Expected array or object data from server');
     }
 
     cache.set(cacheKey, { data, timestamp: Date.now() });
@@ -157,8 +184,6 @@ export function toggleTheme() {
   updateThemeButton(newTheme);
 }
 
-window.toggleTheme = toggleTheme;
-
 function updateThemeButton(theme) {
   const themeToggle = document.getElementById('theme-toggle');
   if (!themeToggle) return;
@@ -180,69 +205,65 @@ function updateThemeButton(theme) {
 }
 
 export function isMovieWatched(index) {
-  const watched = JSON.parse(localStorage.getItem(WATCHED_MOVIES_KEY) || '[]');
+  const watched = getStorageItem(WATCHED_MOVIES_KEY, '[]');
   return watched.includes(index);
 }
 
 export function markMovieWatched(index) {
-  const watched = JSON.parse(localStorage.getItem(WATCHED_MOVIES_KEY) || '[]');
+  const watched = getStorageItem(WATCHED_MOVIES_KEY, '[]');
   if (!watched.includes(index)) {
     watched.push(index);
-    localStorage.setItem(WATCHED_MOVIES_KEY, JSON.stringify(watched));
+    setStorageItem(WATCHED_MOVIES_KEY, watched);
   }
 }
 
 export function unmarkMovieWatched(index) {
-  const watched = JSON.parse(localStorage.getItem(WATCHED_MOVIES_KEY) || '[]');
+  const watched = getStorageItem(WATCHED_MOVIES_KEY, '[]');
   const newWatched = watched.filter(i => i !== index);
-  localStorage.setItem(WATCHED_MOVIES_KEY, JSON.stringify(newWatched));
+  setStorageItem(WATCHED_MOVIES_KEY, newWatched);
 }
 
 export function getWatchedEpisodes() {
-  try {
-    return JSON.parse(localStorage.getItem(WATCHED_EPISODES_KEY)) || {};
-  } catch {
-    return {};
-        }
+  return getStorageItem(WATCHED_EPISODES_KEY, '{}');
 }
 
 export function setWatchedEpisodes(obj) {
-  localStorage.setItem(WATCHED_EPISODES_KEY, JSON.stringify(obj));
-      }
+  setStorageItem(WATCHED_EPISODES_KEY, obj);
+}
 
 export function isEpisodeWatched(seasonIndex, episodeIndex) {
-  const watched = JSON.parse(localStorage.getItem(WATCHED_EPISODES_KEY) || '{}');
+  const watched = getStorageItem(WATCHED_EPISODES_KEY, '{}');
   return watched[seasonIndex]?.includes(episodeIndex) || false;
   }
 
 export function markEpisodeWatched(seasonIndex, episodeIndex) {
-  const watched = JSON.parse(localStorage.getItem(WATCHED_EPISODES_KEY) || '{}');
+  const watched = getStorageItem(WATCHED_EPISODES_KEY, '{}');
   if (!watched[seasonIndex]) {
     watched[seasonIndex] = [];
   }
   if (!watched[seasonIndex].includes(episodeIndex)) {
     watched[seasonIndex].push(episodeIndex);
-    localStorage.setItem(WATCHED_EPISODES_KEY, JSON.stringify(watched));
+    setStorageItem(WATCHED_EPISODES_KEY, watched);
   }
 }
 
 export function unmarkEpisodeWatched(seasonIndex, episodeIndex) {
-  const watched = JSON.parse(localStorage.getItem(WATCHED_EPISODES_KEY) || '{}');
+  const watched = getStorageItem(WATCHED_EPISODES_KEY, '{}');
   if (watched[seasonIndex]) {
     watched[seasonIndex] = watched[seasonIndex].filter(i => i !== episodeIndex);
-    localStorage.setItem(WATCHED_EPISODES_KEY, JSON.stringify(watched));
+    setStorageItem(WATCHED_EPISODES_KEY, watched);
   }
 }
 
 let previewMuted = true;
 try {
-  previewMuted = localStorage.getItem('previewMuted') !== 'false';
+  previewMuted = getStorageItem('previewMuted', 'true') !== false;
 } catch (e) {}
 
 export function togglePreviewMute() {
   previewMuted = !previewMuted;
   try {
-    localStorage.setItem('previewMuted', previewMuted ? 'true' : 'false');
+    setStorageItem('previewMuted', previewMuted);
   } catch (e) {}
   
   document.querySelectorAll('.preview-video').forEach(v => v.muted = previewMuted);
@@ -304,29 +325,3 @@ export function loadSidebarData(url, container, linkTemplate) {
       `;
     });
 }
-
-export default {
-  getElement,
-  getElementById,
-  updateElement,
-  debounce,
-  fetchData,
-  handleError,
-  showError,
-  sanitizeHTML,
-  createImageElement,
-  createVideoElement,
-  createPreviewVideo,
-  initTheme,
-  toggleTheme,
-  isMovieWatched,
-  markMovieWatched,
-  unmarkMovieWatched,
-  getWatchedEpisodes,
-  setWatchedEpisodes,
-  isEpisodeWatched,
-  markEpisodeWatched,
-  unmarkEpisodeWatched,
-  togglePreviewMute,
-  loadSidebarData
-};
