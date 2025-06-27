@@ -636,6 +636,25 @@ html.dark-theme button.collapsible-header:focus {
   user-select: none;
 }
 
+.mark-watched-btn {
+  margin: 4px 0 8px 0;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: inline-block;
+  background: none;
+  color: #3498db;
+  font-weight: bold;
+  border-radius: 4px;
+  padding: 2px 6px;
+  transition: background 0.2s, color 0.2s;
+  user-select: none;
+}
+
+.mark-watched-btn:hover {
+  background: rgba(52, 152, 219, 0.1);
+  color: #2980b9;
+}
+
 .movie-card .watched-indicator-container {
   margin-top: -8px;
   margin-bottom: 8px;
