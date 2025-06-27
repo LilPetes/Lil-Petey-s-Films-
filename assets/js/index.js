@@ -208,6 +208,15 @@ function main() {
       }
       card.appendChild(img);
       card.appendChild(titleContainer);
+      
+      if (item.description) {
+        const description = document.createElement('p');
+        description.className = 'description';
+        const formattedDescription = item.description.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        description.innerHTML = formattedDescription;
+        card.appendChild(description);
+      }
+      
       return card;
     }
 
