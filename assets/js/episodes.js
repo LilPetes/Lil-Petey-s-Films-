@@ -1,5 +1,5 @@
 import { initSidebar } from './sidebar.js';
-import { fetchData, sanitizeHTML, handleError, markEpisodeWatched, isEpisodeWatched, unmarkEpisodeWatched } from './utils.js';
+import { fetchData, sanitizeHTML, handleError, markEpisodeWatched, isEpisodeWatched, unmarkEpisodeWatched, createWatchedIndicator, createMarkWatchedButton } from './utils.js';
 
 fetch('./sidebar.html')
   .then(res => res.text())
@@ -79,106 +79,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     episodeElement.appendChild(titleElement);
 
     if (isEpisodeWatched(seasonIdx, index)) {
-      const watchedDiv = document.createElement('div');
-      watchedDiv.className = 'watched-indicator';
-      watchedDiv.tabIndex = 0;
-      watchedDiv.setAttribute('role', 'button');
-      watchedDiv.setAttribute('aria-label', 'Remove watched status');
-      watchedDiv.textContent = '✔️ Watched';
-      watchedDiv.addEventListener('mouseenter', () => {
-        watchedDiv.textContent = '❌ Remove Watched Status';
-      });
-      watchedDiv.addEventListener('mouseleave', () => {
-        watchedDiv.textContent = '✔️ Watched';
-      });
-      watchedDiv.addEventListener('click', () => {
-        unmarkEpisodeWatched(seasonIdx, index);
-        watchedDiv.remove();
-        const markWatchedBtn = document.createElement('div');
-        markWatchedBtn.className = 'mark-watched-btn';
-        markWatchedBtn.tabIndex = 0;
-        markWatchedBtn.setAttribute('role', 'button');
-        markWatchedBtn.setAttribute('aria-label', 'Mark as watched');
-        markWatchedBtn.textContent = '👁️ Mark as Watched';
-        markWatchedBtn.addEventListener('click', () => {
-          markEpisodeWatched(seasonIdx, index);
-          markWatchedBtn.remove();
-          const watchedIndicator = document.createElement('div');
-          watchedIndicator.className = 'watched-indicator';
-          watchedIndicator.tabIndex = 0;
-          watchedIndicator.setAttribute('role', 'button');
-          watchedIndicator.setAttribute('aria-label', 'Remove watched status');
-          watchedIndicator.textContent = '✔️ Watched';
-          watchedIndicator.addEventListener('mouseenter', () => {
-            watchedIndicator.textContent = '❌ Remove Watched Status';
-          });
-          watchedIndicator.addEventListener('mouseleave', () => {
-            watchedIndicator.textContent = '✔️ Watched';
-          });
-          watchedIndicator.addEventListener('click', () => {
-            unmarkEpisodeWatched(seasonIdx, index);
-            watchedIndicator.remove();
-            episodeElement.appendChild(markWatchedBtn);
-          });
-          watchedIndicator.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              watchedIndicator.click();
-            }
-          });
-          titleElement.after(watchedIndicator);
-        });
-        markWatchedBtn.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            markWatchedBtn.click();
-          }
-        });
-        titleElement.after(markWatchedBtn);
-      });
-      watchedDiv.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          watchedDiv.click();
-        }
-      });
+      const watchedDiv = createWatchedIndicator(seasonIdx, index, titleElement);
       episodeElement.appendChild(watchedDiv);
     } else {
-      const markWatchedBtn = document.createElement('div');
-      markWatchedBtn.className = 'mark-watched-btn';
-      markWatchedBtn.tabIndex = 0;
-      markWatchedBtn.setAttribute('role', 'button');
-      markWatchedBtn.setAttribute('aria-label', 'Mark as watched');
-      markWatchedBtn.textContent = '👁️ Mark as Watched';
-      markWatchedBtn.addEventListener('click', () => {
-        markEpisodeWatched(seasonIdx, index);
-        markWatchedBtn.remove();
-        const watchedDiv = document.createElement('div');
-        watchedDiv.className = 'watched-indicator';
-        watchedDiv.tabIndex = 0;
-        watchedDiv.setAttribute('role', 'button');
-        watchedDiv.setAttribute('aria-label', 'Remove watched status');
-        watchedDiv.textContent = '✔️ Watched';
-        watchedDiv.addEventListener('mouseenter', () => {
-          watchedDiv.textContent = '❌ Remove Watched Status';
-        });
-        watchedDiv.addEventListener('mouseleave', () => {
-          watchedDiv.textContent = '✔️ Watched';
-        });
-        watchedDiv.addEventListener('click', () => {
-          unmarkEpisodeWatched(seasonIdx, index);
-          watchedDiv.remove();
-          titleElement.after(markWatchedBtn);
-        });
-        watchedDiv.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            watchedDiv.click();
-          }
-        });
-        titleElement.after(watchedDiv);
-      });
-      markWatchedBtn.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          markWatchedBtn.click();
-        }
-      });
+      const markWatchedBtn = createMarkWatchedButton(seasonIdx, index, titleElement);
       episodeElement.appendChild(markWatchedBtn);
     }
 
