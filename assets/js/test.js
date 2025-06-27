@@ -1,5 +1,5 @@
 import { initSidebar } from './sidebar.js';
-import { fetchData, sanitizeHTML, handleError, isMovieWatched, markMovieWatched, unmarkMovieWatched, isEpisodeWatched, markEpisodeWatched, unmarkEpisodeWatched, createPreviewVideo, togglePreviewMute, initTheme } from './utils.js';
+import { fetchData, sanitizeHTML, handleError, isMovieWatched, markMovieWatched, unmarkMovieWatched, isEpisodeWatched, markEpisodeWatched, unmarkEpisodeWatched, createPreviewVideo, togglePreviewMute } from './utils.js';
 
 fetch('./sidebar.html')
   .then(res => res.text())
