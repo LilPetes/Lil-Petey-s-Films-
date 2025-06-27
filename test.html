@@ -4,93 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta name="description" content="Test page for Lil Petey's Films+ website functions">
-  <title>Website Functions Test</title>
-  <link rel="icon" type="image/x-icon" href="./favicon.ico">
-  <link rel="stylesheet" href="./style/style.css">
-  <style>
-    .test-section {
-      margin: 20px 0;
-      padding: 20px;
-      border: 2px solid var(--border-color);
-      border-radius: 8px;
-      background: var(--card-bg);
-    }
-    .test-title {
-      font-size: 1.5rem;
-      margin-bottom: 15px;
-      color: var(--text-color);
-    }
-    .test-button {
-      background: var(--card-bg);
-      color: var(--text-color);
-      border: 1px solid var(--border-color);
-      padding: 10px 15px;
-      margin: 5px;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-    .test-button:hover {
-      background: var(--border-color);
-    }
-    .test-result {
-      margin: 10px 0;
-      padding: 10px;
-      border-radius: 4px;
-      background: var(--search-bg);
-      color: var(--text-color);
-    }
-    .test-success {
-      background: rgba(76, 175, 80, 0.2);
-      border-left: 4px solid #4caf50;
-    }
-    .test-error {
-      background: rgba(244, 67, 54, 0.2);
-      border-left: 4px solid #f44336;
-    }
-    .test-info {
-      background: rgba(33, 150, 243, 0.2);
-      border-left: 4px solid #2196f3;
-    }
-    .mock-card {
-      width: 200px;
-      height: 300px;
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      margin: 10px;
-      display: inline-block;
-      position: relative;
-      cursor: pointer;
-    }
-    .mock-card img {
-      width: 100%;
-      height: 150px;
-      object-fit: cover;
-      border-radius: 8px 8px 0 0;
-    }
-    .mock-card .title {
-      padding: 10px;
-      color: var(--text-color);
-      font-weight: bold;
-    }
-    .test-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 20px;
-      margin: 20px 0;
-    }
-    .status-indicator {
-      display: inline-block;
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      margin-right: 8px;
-    }
-    .status-online { background: #4caf50; }
-    .status-offline { background: #f44336; }
-    .status-loading { background: #ff9800; }
-  </style>
+  <title>Dev testing page</title>
+  <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
+  <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
   <div id="sidebar-container"></div>
@@ -108,67 +24,67 @@
     <div class="test-grid">
       <div class="test-section">
         <h2 class="test-title">Sidebar Navigation Test</h2>
-        <button class="test-button" onclick="testSidebar()">Test Sidebar Toggle</button>
-        <button class="test-button" onclick="testSidebarSearch()">Test Search Function</button>
-        <button class="test-button" onclick="testSidebarKeyboard()">Test Keyboard Navigation</button>
+        <button id="test-sidebar-toggle" class="test-button">Test Sidebar Toggle</button>
+        <button id="test-sidebar-search" class="test-button">Test Search Function</button>
+        <button id="test-sidebar-keyboard" class="test-button">Test Keyboard Navigation</button>
         <div id="sidebar-test-result" class="test-result"></div>
       </div>
 
       <div class="test-section">
         <h2 class="test-title">Theme Switching Test</h2>
-        <button class="test-button" onclick="testThemeSwitch()">Cycle Through Themes</button>
-        <button class="test-button" onclick="testThemePersistence()">Test Theme Persistence</button>
+        <button id="test-theme-switch" class="test-button">Cycle Through Themes</button>
+        <button id="test-theme-persistence" class="test-button">Test Theme Persistence</button>
         <div id="theme-test-result" class="test-result"></div>
         <div>Current theme: <span id="current-theme">Loading...</span></div>
       </div>
 
       <div class="test-section">
         <h2 class="test-title">Data Loading Test</h2>
-        <button class="test-button" onclick="testDataLoading()">Test JSON Data Loading</button>
-        <button class="test-button" onclick="testDataCache()">Test Data Caching</button>
-        <button class="test-button" onclick="testErrorHandling()">Test Error Handling</button>
+        <button id="test-data-loading" class="test-button">Test JSON Data Loading</button>
+        <button id="test-data-cache" class="test-button">Test Data Caching</button>
+        <button id="test-error-handling" class="test-button">Test Error Handling</button>
         <div id="data-test-result" class="test-result"></div>
       </div>
 
       <div class="test-section">
         <h2 class="test-title">Watched Status Test</h2>
-        <button class="test-button" onclick="testWatchedMovies()">Test Movie Watched Status</button>
-        <button class="test-button" onclick="testWatchedEpisodes()">Test Episode Watched Status</button>
-        <button class="test-button" onclick="clearWatchedData()">Clear All Watched Data</button>
+        <button id="test-watched-movies" class="test-button">Test Movie Watched Status</button>
+        <button id="test-watched-episodes" class="test-button">Test Episode Watched Status</button>
+        <button id="clear-watched-data" class="test-button">Clear All Watched Data</button>
         <div id="watched-test-result" class="test-result"></div>
       </div>
 
       <div class="test-section">
         <h2 class="test-title">Video Preview Test</h2>
-        <div class="mock-card" onmouseenter="testVideoPreview(this)" onmouseleave="stopVideoPreview(this)">
+        <div id="test-video-preview-card" class="mock-card">
           <img src="https://granny.anondrop.net/uploads/a91ea5edd4aad897/youtube_lBvZjp80R_M_1920x1080_h264.mp4" alt="Test video">
           <div class="title">Test Video Preview</div>
         </div>
-        <button class="test-button" onclick="testPreviewMute()">Test Preview Mute Toggle</button>
+        <button id="test-preview-mute" class="test-button">Test Preview Mute Toggle</button>
         <div id="preview-test-result" class="test-result"></div>
       </div>
 
       <div class="test-section">
         <h2 class="test-title">Responsive Design Test</h2>
-        <button class="test-button" onclick="testResponsive()">Test Responsive Breakpoints</button>
-        <button class="test-button" onclick="testTouchSupport()">Test Touch Support</button>
+        <button id="test-responsive" class="test-button">Test Responsive Breakpoints</button>
+        <button id="test-touch-support" class="test-button">Test Touch Support</button>
         <div id="responsive-test-result" class="test-result"></div>
         <div>Screen size: <span id="screen-size">Loading...</span></div>
       </div>
 
       <div class="test-section">
         <h2 class="test-title">Accessibility Test</h2>
-        <button class="test-button" onclick="testKeyboardNavigation()">Test Keyboard Navigation</button>
-        <button class="test-button" onclick="testScreenReader()">Test Screen Reader Support</button>
-        <button class="test-button" onclick="testFocusManagement()">Test Focus Management</button>
+        <button id="test-keyboard-navigation" class="test-button">Test Keyboard Navigation</button>
+        <button id="test-screen-reader" class="test-button">Test Screen Reader Support</button>
+        <button id="test-focus-management" class="test-button">Test Focus Management</button>
         <div id="accessibility-test-result" class="test-result"></div>
       </div>
 
       <div class="test-section">
         <h2 class="test-title">Performance Test</h2>
-        <button class="test-button" onclick="testLoadTime()">Test Page Load Time</button>
-        <button class="test-button" onclick="testMemoryUsage()">Test Memory Usage</button>
-        <button class="test-button" onclick="testNetworkRequests()">Test Network Requests</button>
+        <button id="test-load-time" class="test-button">Test Page Load Time</button>
+        <button id="test-memory-usage" class="test-button">Test Memory Usage</button>
+        <button id="test-network-requests" class="test-button">Test Network Requests</button>
         <div id="performance-test-result" class="test-result"></div>
       </div>
     </div>
@@ -181,357 +97,9 @@
     </div>
   </main>
 
-  <script type="module">
-    import { initSidebar } from './sidebar.js';
-    import { fetchData, sanitizeHTML, handleError, isMovieWatched, markMovieWatched, unmarkMovieWatched, isEpisodeWatched, markEpisodeWatched, unmarkEpisodeWatched, createPreviewVideo, togglePreviewMute, initTheme } from './utils.js';
-
-    fetch('./sidebar.html')
-      .then(res => res.text())
-      .then(html => {
-        document.getElementById('sidebar-container').innerHTML = html;
-      })
-      .then(() => {
-        initSidebar();
-        initTestEnvironment();
-      })
-      .catch(error => {
-        console.error('Failed to initialize test environment:', error);
-        document.getElementById('sidebar-test-result').innerHTML = `
-          <div class="test-error">Failed to load sidebar: ${error.message}</div>
-        `;
-      });
-
-    function initTestEnvironment() {
-      updateCurrentTheme();
-      updateScreenSize();
-      updateSystemStatus();
-      
-      window.testSidebar = testSidebar;
-      window.testSidebarSearch = testSidebarSearch;
-      window.testSidebarKeyboard = testSidebarKeyboard;
-      window.testThemeSwitch = testThemeSwitch;
-      window.testThemePersistence = testThemePersistence;
-      window.testDataLoading = testDataLoading;
-      window.testDataCache = testDataCache;
-      window.testErrorHandling = testErrorHandling;
-      window.testWatchedMovies = testWatchedMovies;
-      window.testWatchedEpisodes = testWatchedEpisodes;
-      window.clearWatchedData = clearWatchedData;
-      window.testVideoPreview = testVideoPreview;
-      window.stopVideoPreview = stopVideoPreview;
-      window.testPreviewMute = testPreviewMute;
-      window.testResponsive = testResponsive;
-      window.testTouchSupport = testTouchSupport;
-      window.testKeyboardNavigation = testKeyboardNavigation;
-      window.testScreenReader = testScreenReader;
-      window.testFocusManagement = testFocusManagement;
-      window.testLoadTime = testLoadTime;
-      window.testMemoryUsage = testMemoryUsage;
-      window.testNetworkRequests = testNetworkRequests;
-    }
-
-    function updateCurrentTheme() {
-      const theme = document.documentElement.className.replace('-mode', '') || 'dark';
-      document.getElementById('current-theme').textContent = theme;
-    }
-
-    function updateScreenSize() {
-      const size = `${window.innerWidth}px × ${window.innerHeight}px`;
-      document.getElementById('screen-size').textContent = size;
-    }
-
-    function updateSystemStatus() {
-      const status = document.getElementById('system-status');
-      const checks = [
-        { name: 'JavaScript', status: 'online' },
-        { name: 'CSS Loading', status: document.styleSheets.length > 0 ? 'online' : 'offline' },
-        { name: 'Local Storage', status: typeof(Storage) !== "undefined" ? 'online' : 'offline' },
-        { name: 'Fetch API', status: typeof fetch !== 'undefined' ? 'online' : 'offline' },
-        { name: 'ES6 Modules', status: 'online' }
-      ];
-
-      status.innerHTML = checks.map(check => 
-        `<div><span class="status-indicator status-${check.status}"></span>${check.name}: ${check.status}</div>`
-      ).join('');
-    }
-
-    function testSidebar() {
-      const sidebar = document.getElementById('sidebar');
-      const result = document.getElementById('sidebar-test-result');
-      
-      if (sidebar) {
-        sidebar.classList.toggle('active');
-        const isActive = sidebar.classList.contains('active');
-        result.innerHTML = `
-          <div class="test-success">Sidebar ${isActive ? 'opened' : 'closed'} successfully</div>
-        `;
-      } else {
-        result.innerHTML = `
-          <div class="test-error">Sidebar element not found</div>
-        `;
-      }
-    }
-
-    function testSidebarSearch() {
-      const searchInput = document.getElementById('global-search');
-      const result = document.getElementById('sidebar-test-result');
-      
-      if (searchInput) {
-        searchInput.value = 'test search';
-        searchInput.dispatchEvent(new Event('input'));
-        result.innerHTML = `
-          <div class="test-success">Search input tested successfully</div>
-        `;
-      } else {
-        result.innerHTML = `
-          <div class="test-error">Search input not found</div>
-        `;
-      }
-    }
-
-    function testSidebarKeyboard() {
-      const result = document.getElementById('sidebar-test-result');
-      result.innerHTML = `
-        <div class="test-info">Press Ctrl+F (or Cmd+F on Mac) to test keyboard navigation</div>
-      `;
-    }
-
-    function testThemeSwitch() {
-      const result = document.getElementById('theme-test-result');
-      const currentTheme = document.documentElement.className.replace('-mode', '') || 'dark';
-      
-      let newTheme;
-      switch (currentTheme) {
-        case 'light': newTheme = 'dark'; break;
-        case 'dark': newTheme = 'oled'; break;
-        case 'oled': newTheme = 'light'; break;
-        default: newTheme = 'dark';
-      }
-      
-      document.documentElement.className = newTheme + '-mode';
-      localStorage.setItem('theme', newTheme);
-      updateCurrentTheme();
-      
-      result.innerHTML = `
-        <div class="test-success">Theme switched from ${currentTheme} to ${newTheme}</div>
-      `;
-    }
-
-    function testThemePersistence() {
-      const result = document.getElementById('theme-test-result');
-      const savedTheme = localStorage.getItem('theme');
-      const currentTheme = document.documentElement.className.replace('-mode', '') || 'dark';
-      
-      if (savedTheme === currentTheme) {
-        result.innerHTML = `
-          <div class="test-success">Theme persistence working correctly</div>
-        `;
-      } else {
-        result.innerHTML = `
-          <div class="test-error">Theme persistence issue: saved=${savedTheme}, current=${currentTheme}</div>
-        `;
-      }
-    }
-
-    async function testDataLoading() {
-      const result = document.getElementById('data-test-result');
-      result.innerHTML = `
-        <div class="test-info">Testing data loading...</div>
-      `;
-      
-      try {
-        const movieData = await fetchData('./data/movie_data.json');
-        const episodeData = await fetchData('./data/episodes_data.json');
-        const comingSoonData = await fetchData('./data/comingsoon_data.json');
-        
-        result.innerHTML = `
-          <div class="test-success">
-            Data loading successful:<br>
-            Movies: ${movieData.length} items<br>
-            Episodes: ${episodeData.length} items<br>
-            Coming Soon: ${comingSoonData.length} items
-          </div>
-        `;
-      } catch (error) {
-        result.innerHTML = `
-          <div class="test-error">Data loading failed: ${error.message}</div>
-        `;
-      }
-    }
-
-    function testDataCache() {
-      const result = document.getElementById('data-test-result');
-      result.innerHTML = `
-        <div class="test-info">Cache testing requires multiple data requests. Check console for cache behavior.</div>
-      `;
-    }
-
-    function testErrorHandling() {
-      const result = document.getElementById('data-test-result');
-      
-      fetchData('./nonexistent.json')
-        .then(() => {
-          result.innerHTML = `
-            <div class="test-error">Error handling failed: should have thrown error</div>
-          `;
-        })
-        .catch(error => {
-          result.innerHTML = `
-            <div class="test-success">Error handling working: ${error.message}</div>
-          `;
-        });
-    }
-
-    function testWatchedMovies() {
-      const result = document.getElementById('watched-test-result');
-      
-      markMovieWatched(0);
-      const isWatched = isMovieWatched(0);
-      unmarkMovieWatched(0);
-      const isUnwatched = !isMovieWatched(0);
-      
-      if (isWatched && isUnwatched) {
-        result.innerHTML = `
-          <div class="test-success">Movie watched status working correctly</div>
-        `;
-      } else {
-        result.innerHTML = `
-          <div class="test-error">Movie watched status test failed</div>
-        `;
-      }
-    }
-
-    function testWatchedEpisodes() {
-      const result = document.getElementById('watched-test-result');
-      
-      markEpisodeWatched(0, 0);
-      const isWatched = isEpisodeWatched(0, 0);
-      unmarkEpisodeWatched(0, 0);
-      const isUnwatched = !isEpisodeWatched(0, 0);
-      
-      if (isWatched && isUnwatched) {
-        result.innerHTML = `
-          <div class="test-success">Episode watched status working correctly</div>
-        `;
-      } else {
-        result.innerHTML = `
-          <div class="test-error">Episode watched status test failed</div>
-        `;
-      }
-    }
-
-    function clearWatchedData() {
-      localStorage.removeItem('watchedMovies');
-      localStorage.removeItem('watchedEpisodes');
-      document.getElementById('watched-test-result').innerHTML = `
-        <div class="test-success">All watched data cleared</div>
-      `;
-    }
-
-    function testVideoPreview(card) {
-      const result = document.getElementById('preview-test-result');
-      result.innerHTML = `
-        <div class="test-info">Video preview triggered (hover over card)</div>
-      `;
-    }
-
-    function stopVideoPreview(card) {
-      const result = document.getElementById('preview-test-result');
-      result.innerHTML = `
-        <div class="test-info">Video preview stopped</div>
-      `;
-    }
-
-    function testPreviewMute() {
-      const result = document.getElementById('preview-test-result');
-      togglePreviewMute();
-      const muted = localStorage.getItem('previewMuted') !== 'false';
-      result.innerHTML = `
-        <div class="test-success">Preview mute toggled: ${muted ? 'muted' : 'unmuted'}</div>
-      `;
-    }
-
-    function testResponsive() {
-      const result = document.getElementById('responsive-test-result');
-      updateScreenSize();
-      result.innerHTML = `
-        <div class="test-success">Responsive test completed. Current size: ${window.innerWidth}px × ${window.innerHeight}px</div>
-      `;
-    }
-
-    function testTouchSupport() {
-      const result = document.getElementById('responsive-test-result');
-      const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      result.innerHTML = `
-        <div class="test-success">Touch support: ${isTouch ? 'Available' : 'Not available'}</div>
-      `;
-    }
-
-    function testKeyboardNavigation() {
-      const result = document.getElementById('accessibility-test-result');
-      result.innerHTML = `
-        <div class="test-info">Tab through elements to test keyboard navigation</div>
-      `;
-    }
-
-    function testScreenReader() {
-      const result = document.getElementById('accessibility-test-result');
-      const hasAria = document.querySelectorAll('[aria-label], [aria-labelledby], [role]').length > 0;
-      result.innerHTML = `
-        <div class="test-success">Screen reader support: ${hasAria ? 'ARIA attributes found' : 'No ARIA attributes found'}</div>
-      `;
-    }
-
-    function testFocusManagement() {
-      const result = document.getElementById('accessibility-test-result');
-      const focusableElements = document.querySelectorAll('button, a, input, select, textarea, [tabindex]:not([tabindex="-1"])');
-      result.innerHTML = `
-        <div class="test-success">Focus management: ${focusableElements.length} focusable elements found</div>
-      `;
-    }
-
-    function testLoadTime() {
-      const result = document.getElementById('performance-test-result');
-      const loadTime = performance.now();
-      result.innerHTML = `
-        <div class="test-success">Page load time: ${loadTime.toFixed(2)}ms</div>
-      `;
-    }
-
-    function testMemoryUsage() {
-      const result = document.getElementById('performance-test-result');
-      if (performance.memory) {
-        const memory = performance.memory;
-        result.innerHTML = `
-          <div class="test-success">
-            Memory usage:<br>
-            Used: ${(memory.usedJSHeapSize / 1048576).toFixed(2)}MB<br>
-            Total: ${(memory.totalJSHeapSize / 1048576).toFixed(2)}MB<br>
-            Limit: ${(memory.jsHeapSizeLimit / 1048576).toFixed(2)}MB
-          </div>
-        `;
-      } else {
-        result.innerHTML = `
-          <div class="test-info">Memory usage not available in this browser</div>
-        `;
-      }
-    }
-
-    function testNetworkRequests() {
-      const result = document.getElementById('performance-test-result');
-      const entries = performance.getEntriesByType('resource');
-      const totalRequests = entries.length;
-      const totalSize = entries.reduce((sum, entry) => sum + (entry.transferSize || 0), 0);
-      
-      result.innerHTML = `
-        <div class="test-success">
-          Network requests: ${totalRequests}<br>
-          Total size: ${(totalSize / 1024).toFixed(2)}KB
-        </div>
-      `;
-    }
-
-    window.addEventListener('resize', updateScreenSize);
-  </script>
+  <script type="module" src="assets/js/utils.js"></script>
+  <script type="module" src="assets/js/media.js"></script>
+  <script type="module" src="assets/js/sidebar.js"></script>
+  <script type="module" src="assets/js/test.js"></script>
 </body>
 </html> 
