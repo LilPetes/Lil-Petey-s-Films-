@@ -2,7 +2,7 @@ import { initSidebar } from './sidebar.js';
 import { fetchData, sanitizeHTML, handleError, isMovieWatched, markMovieWatched, unmarkMovieWatched, isEpisodeWatched, markEpisodeWatched, unmarkEpisodeWatched, createPreviewVideo, togglePreviewMute } from './utils.js';
 
 function main() {
-    fetch('../../sidebar.html')
+    fetch('./sidebar.html')
       .then(res => res.text())
       .then(html => {
         document.getElementById('sidebar-container').innerHTML = html;
@@ -241,9 +241,9 @@ function main() {
     const episodesSort = document.getElementById('episodes-sort');
 
     Promise.all([
-      fetchData('../../data/movie_data.json'),
-      fetchData('../../data/episodes_data.json'),
-      fetchData('../../data/comingsoon_data.json')
+      fetchData('./data/movie_data.json'),
+      fetchData('./data/episodes_data.json'),
+      fetchData('./data/comingsoon_data.json')
     ]).then(([movies, episodes, comingSoon]) => {
       moviesData = movies;
       episodesData = episodes;
