@@ -1,7 +1,7 @@
 import { initSidebar } from './sidebar.js';
 import { fetchData, sanitizeHTML, handleError, markEpisodeWatched, isEpisodeWatched, unmarkEpisodeWatched } from './utils.js';
 
-fetch('../../sidebar.html')
+fetch('./sidebar.html')
   .then(res => res.text())
   .then(html => {
     document.getElementById('sidebar-container').innerHTML = html;
