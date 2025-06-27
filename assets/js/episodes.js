@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const seasonIdx = parseInt(params.get('season'), 10);
   let seasonData = null;
   try {
-    const data = await fetchData('../../data/episodes_data.json');
+    const data = await fetchData('./data/episodes_data.json');
     if (!Array.isArray(data) || isNaN(seasonIdx) || seasonIdx < 0 || seasonIdx >= data.length) {
       throw new Error('Invalid season index');
     }

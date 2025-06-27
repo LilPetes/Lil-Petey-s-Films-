@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const movieIdx = parseInt(params.get('movie'), 10);
   let movieData = null;
   try {
-    const data = await fetchData('../../data/movie_data.json');
+    const data = await fetchData('./data/movie_data.json');
     if (!Array.isArray(data) || isNaN(movieIdx) || movieIdx < 0 || movieIdx >= data.length) {
       throw new Error('Invalid movie index');
     }
