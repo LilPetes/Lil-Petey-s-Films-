@@ -174,8 +174,9 @@ function main() {
         img.alt = 'Image could not be loaded';
         img.onerror = null;
       };
-      if (item.preview || item.embed_link) {
-        setupPreview(card, item.preview || item.embed_link, item.title);
+      const previewSrc = containerId === 'coming-soon-gallery' ? item.trailer : (item.preview || item.embed_link);
+      if (previewSrc) {
+        setupPreview(card, previewSrc, item.title);
       }
       const title = document.createElement('h3');
       title.id = cardId;
