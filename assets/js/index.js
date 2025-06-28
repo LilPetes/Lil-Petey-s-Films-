@@ -223,7 +223,7 @@ function main() {
       }
       card.appendChild(img);
       card.appendChild(titleContainer);
-
+ 
       if (item.description) {
         const description = document.createElement('p');
         description.className = 'description';

@@ -1,5 +1,5 @@
 import { initSidebar } from './sidebar.js';
-import { fetchData, sanitizeHTML, handleError, markEpisodeWatched, isEpisodeWatched, unmarkEpisodeWatched } from './utils.js';
+import { fetchData, sanitizeHTML, handleError, markEpisodeWatched, isEpisodeWatched, unmarkEpisodeWatched, createWatchedIndicator, createMarkWatchedButton } from './utils.js';
 
 fetch('./sidebar.html')
   .then(res => res.text())
@@ -79,28 +79,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     episodeElement.appendChild(titleElement);
 
     if (isEpisodeWatched(seasonIdx, index)) {
-      const watchedDiv = document.createElement('div');
-      watchedDiv.className = 'watched-indicator';
-      watchedDiv.tabIndex = 0;
-      watchedDiv.setAttribute('role', 'button');
-      watchedDiv.setAttribute('aria-label', 'Remove watched status');
-      watchedDiv.textContent = '✔️ Watched';
-      watchedDiv.addEventListener('mouseenter', () => {
-        watchedDiv.textContent = '❌ Remove Watched Status';
-      });
-      watchedDiv.addEventListener('mouseleave', () => {
-        watchedDiv.textContent = '✔️ Watched';
-      });
-      watchedDiv.addEventListener('click', () => {
-        unmarkEpisodeWatched(seasonIdx, index);
-        watchedDiv.remove();
-      });
-      watchedDiv.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          watchedDiv.click();
-        }
-      });
+      const watchedDiv = createWatchedIndicator(seasonIdx, index, titleElement);
       episodeElement.appendChild(watchedDiv);
+    } else {
+      const markWatchedBtn = createMarkWatchedButton(seasonIdx, index, titleElement);
+      episodeElement.appendChild(markWatchedBtn);
     }
 
     const descriptionElement = document.createElement('p');
