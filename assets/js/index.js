@@ -68,8 +68,9 @@ function main() {
             if (previewVideo) {
               card.appendChild(previewVideo);
               previewVideo.muted = localStorage.getItem('previewMuted') !== 'false';
+              const startTime = Math.max(0, (previewVideo.duration / 2) - 10);
               let seekAndPlay = () => {
-                previewVideo.currentTime = 0;
+                previewVideo.currentTime = startTime;
                 previewVideo.play().catch(() => {});
                 previewVideo.classList.add('active');
               };
@@ -92,7 +93,7 @@ function main() {
               card.appendChild(volumeBtn);
               previewVideo.addEventListener('timeupdate', () => {
                 if (previewVideo.currentTime >= previewVideo.duration - 0.1) {
-                  previewVideo.currentTime = 0;
+                  previewVideo.currentTime = startTime;
                   previewVideo.play().catch(() => {});
                 }
               });
@@ -100,12 +101,13 @@ function main() {
           } else {
             previewVideo.classList.add('active');
             previewVideo.muted = localStorage.getItem('previewMuted') !== 'false';
+            const startTime = Math.max(0, (previewVideo.duration / 2) - 10);
             if (previewVideo.readyState >= 3) {
-              previewVideo.currentTime = 0;
+              previewVideo.currentTime = startTime;
               previewVideo.play().catch(() => {});
             } else {
               previewVideo.addEventListener('canplay', () => {
-                previewVideo.currentTime = 0;
+                previewVideo.currentTime = startTime;
                 previewVideo.play().catch(() => {});
               }, { once: true });
             }
@@ -121,9 +123,10 @@ function main() {
           previewTimer = null;
         }
         if (previewVideo && previewLoaded) {
+          const startTime = Math.max(0, (previewVideo.duration / 2) - 10);
           previewVideo.classList.remove('active');
           previewVideo.pause();
-          previewVideo.currentTime = 0;
+          previewVideo.currentTime = startTime;
           volumeBtn = card.querySelector('.preview-volume-btn');
           if (volumeBtn) volumeBtn.style.display = 'none';
         }
@@ -174,7 +177,18 @@ function main() {
         img.alt = 'Image could not be loaded';
         img.onerror = null;
       };
-      const previewSrc = containerId === 'coming-soon-gallery' ? item.trailer : (item.preview || item.embed_link);
+
+      let previewSrc;
+      if (containerId === 'coming-soon-gallery' && item.trailer) {
+        previewSrc = item.trailer;
+      } else if (paramName === 'season' && Array.isArray(item.embed_links) && item.embed_links.length > 0) {
+        previewSrc = item.embed_links[0].embed_link;
+      } else if (paramName === 'movie' && item.embed_link) {
+        previewSrc = item.embed_link;
+      } else {
+        previewSrc = item.preview || item.embed_link;
+      }
+      
       if (previewSrc) {
         setupPreview(card, previewSrc, item.title);
       }
