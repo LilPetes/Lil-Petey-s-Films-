@@ -88,6 +88,38 @@ document.addEventListener('DOMContentLoaded', async () => {
       headerText.parentNode.insertBefore(indicator, headerText.nextSibling);
     }
   }
+  
+  const trailerSection = document.querySelector('.trailer-section');
+  const trailerIframe = document.querySelector('.trailer-section iframe');
+  
+  if (movieData.trailer && movieData.trailer.trim() !== '') {
+    if (trailerSection) {
+      trailerSection.style.display = 'block';
+      if (trailerIframe) {
+        trailerIframe.src = movieData.trailer;
+        trailerIframe.title = `${movieData.title || 'Movie'} trailer`;
+        trailerIframe.setAttribute('aria-label', `${movieData.title || 'Movie'} trailer player`);
+      }
+    }
+  } else if (movieData.video_url && movieData.video_url.trim() !== '') {
+    if (trailerSection) {
+      trailerSection.style.display = 'block';
+      const trailerLabel = trailerSection.querySelector('.trailer-label');
+      if (trailerLabel) trailerLabel.textContent = 'PREVIEW';
+      if (trailerIframe) {
+        let embedUrl = movieData.video_url;
+        if (embedUrl.includes('youtube.com/watch?v=')) {
+          embedUrl = embedUrl.replace('youtube.com/watch?v=', 'youtube.com/embed/');
+        } else if (embedUrl.includes('youtu.be/')) {
+          embedUrl = embedUrl.replace('youtu.be/', 'youtube.com/embed/');
+        }
+        trailerIframe.src = embedUrl;
+        trailerIframe.title = `${movieData.title || 'Movie'} preview`;
+        trailerIframe.setAttribute('aria-label', `${movieData.title || 'Movie'} preview player`);
+      }
+    }
+  }
+
   const embedVideo = document.querySelector('.embed-section video');
   if (embedVideo) {
     if (movieData.embed_link) {
