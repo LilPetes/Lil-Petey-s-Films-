@@ -143,14 +143,8 @@ export function initSidebar() {
   }
 
   const loadData = async () => {
-    try {
-      await Promise.all([
-        loadSidebarData('./data/movie_data.json', elements.movieLinks, (i) => `./movie.html?movie=${i}`),
-        loadSidebarData('./data/episodes_data.json', elements.seasonLinks, (i) => `./episodes.html?season=${i}`)
-      ]);
-    } catch (error) {
-      container.innerHTML = '<p style="opacity: 0.6;">Failed to load content</p>';
-    }
+    loadSidebarData('./data/movie_data.json', elements.movieLinks, (i) => `./movie.html?movie=${i}`);
+    loadSidebarData('./data/episodes_data.json', elements.seasonLinks, (i) => `./episodes.html?season=${i}`);
   };
 
   loadData();

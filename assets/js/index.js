@@ -259,26 +259,56 @@ function main() {
       });
     }
 
-    let moviesData, episodesData, comingSoonData;
+    let moviesData = [], episodesData = [], comingSoonData = [];
     const movieSort = document.getElementById('movie-sort');
     const episodesSort = document.getElementById('episodes-sort');
 
-    Promise.all([
-      fetchData('./data/movie_data.json'),
-      fetchData('./data/episodes_data.json'),
+    async function loadDataSections() {
+      const movieGallery = document.getElementById('movie-gallery');
+      const episodesGallery = document.getElementById('episodes-gallery');
+      const comingSoonGallery = document.getElementById('coming-soon-gallery');
+
+      fetchData('./data/movie_data.json')
+        .then(movies => {
+          moviesData = movies || [];
+          renderGallery(sortItems(moviesData, movieSort ? movieSort.value : 'default'), 'movie-gallery', 'movie.html', 'movie');
+        })
+        .catch(error => {
+          console.error('Failed to load movies:', error);
+          moviesData = [];
+          if (movieGallery) {
+            movieGallery.innerHTML = '<div class="error-message"><p>Failed to load movies. Please try again later.</p></div>';
+          }
+        });
+
+      fetchData('./data/episodes_data.json')
+        .then(episodes => {
+          episodesData = episodes || [];
+          renderGallery(sortItems(episodesData, episodesSort ? episodesSort.value : 'default'), 'episodes-gallery', 'episodes.html', 'season');
+        })
+        .catch(error => {
+          console.error('Failed to load episodes:', error);
+          episodesData = [];
+          if (episodesGallery) {
+            episodesGallery.innerHTML = '<div class="error-message"><p>Failed to load episodes. Please try again later.</p></div>';
+          }
+        });
+
       fetchData('./data/comingsoon_data.json')
-    ]).then(([movies, episodes, comingSoon]) => {
-      moviesData = movies;
-      episodesData = episodes;
-      comingSoonData = comingSoon;
-      renderGallery(sortItems(movies, movieSort ? movieSort.value : 'default'), 'movie-gallery', 'movie.html', 'movie');
-      renderGallery(sortItems(episodes, episodesSort ? episodesSort.value : 'default'), 'episodes-gallery', 'episodes.html', 'season');
-      renderGallery(comingSoon, 'coming-soon-gallery', null, null, 'No upcoming projects scheduled.');
-    }).catch(error => {
-      handleError(error, document.getElementById('movie-gallery'));
-      handleError(error, document.getElementById('episodes-gallery'));
-      handleError(error, document.getElementById('coming-soon-gallery'));
-    });
+        .then(comingSoon => {
+          comingSoonData = comingSoon || [];
+          renderGallery(comingSoonData, 'coming-soon-gallery', null, null, 'No upcoming projects scheduled.');
+        })
+        .catch(error => {
+          console.error('Failed to load coming soon data:', error);
+          comingSoonData = [];
+          if (comingSoonGallery) {
+            comingSoonGallery.innerHTML = '<div class="error-message"><p>Failed to load upcoming releases. Please try again later.</p></div>';
+          }
+        });
+    }
+
+    loadDataSections();
 
     if (movieSort) {
         movieSort.addEventListener('change', (e) => {
